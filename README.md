@@ -4,7 +4,11 @@
 
 [🇵🇱 Polska wersja](README.pl.md)
 
-![Bulbulator](docs/screenshot.png)
+![Two carboys with S-shaped airlocks seen by the camera, the marked airlock areas drawn on the image](docs/airlocks.jpg)
+
+*Two carboys of wine watched by Bulbulator — the coloured rectangles are the airlock areas marked on the page.*
+
+![Bulbulator web page](docs/screenshot.png)
 
 ## Features
 

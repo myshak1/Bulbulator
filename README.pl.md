@@ -4,7 +4,11 @@
 
 [🇬🇧 English version](README.md)
 
-![Bulbulator](docs/screenshot.png)
+![Dwa gąsiory z rurkami fermentacyjnymi widziane przez kamerę, z zaznaczonymi obszarami rurek](docs/airlocks.jpg)
+
+*Dwa gąsiory z winem obserwowane przez Bulbulatora — kolorowe prostokąty to obszary rurek zaznaczone na stronie.*
+
+![Strona Bulbulatora](docs/screenshot.png)
 
 ## Możliwości
 
