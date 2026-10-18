@@ -1,0 +1,102 @@
+# 🍷 Bulbulator
+
+**Licznik bąbli w rurkach fermentacyjnych z kamery.** Liczy bąble w rurkach gąsiorów z winem lub piwem i pokazuje na stronie statystyki na żywo, historię i trend fermentacji.
+
+[🇬🇧 English version](README.md)
+
+![Bulbulator](docs/screenshot.png)
+
+## Możliwości
+
+- Liczenie bąbli w **1–4 rurkach** naraz, każda z własną czułością
+- Na żywo dla każdej rurki: bąbli/s, /min, /godz., tempo chwilowe, ostatni bąbel, suma
+- Wykres sygnału wykrywania z linią progu, który ułatwia strojenie
+- Wykres historii (6 h / 24 h / 48 h / 7 dni / całość) i pobieranie CSV
+- Statystyki fermentacji: średnie, najaktywniejsza godzina, trend (przyspiesza / zwalnia)
+- Zaznaczanie rurek myszą bezpośrednio na obrazie z kamery
+- Interfejs po polsku i po angielsku (flagi w prawym górnym rogu)
+- Małe obciążenie: ok. 15% jednego rdzenia na Raspberry Pi 4 i płytkach z RK3399
+
+## Jak to działa
+
+Obraz z kamery jest analizowany ok. 15 razy na sekundę w połowie rozdzielczości. W każdym zaznaczonym prostokącie program mierzy zmianę między kolejnymi klatkami i odejmuje od niej zmianę całego obrazu (migotanie światła, szum kamery). Bąbel to krótki szczyt tej zmiany. Próg sam dopasowuje się do szumu tła każdej rurki (mediana + MAD). Suwak *czułości* ustawia, o ile szczyt musi wystawać ponad ten szum.
+
+## Wymagania
+
+- Linux (Debian, Ubuntu, Raspberry Pi OS, Armbian…) z Pythonem 3 i OpenCV
+- Kamera:
+  - **strumień MJPEG** (zalecane): np. [ustreamer](https://github.com/pikvm/ustreamer), mjpg-streamer albo kamera IP z adresem MJPEG. Wtedy z kamery mogą jednocześnie korzystać inne programy.
+  - albo **kamera USB** czytana bezpośrednio (`/dev/video0`)
+
+## Szybki start (bez kamery)
+
+```sh
+sudo apt install python3-opencv python3-numpy
+git clone https://github.com/myshak1/bulbulator.git
+cd bulbulator
+python3 tools/fake_stream.py 8090 &          # udawana kamera z dwiema bąblującymi rurkami
+BULBULATOR_STREAM=http://127.0.0.1:8090/stream \
+BULBULATOR_HTTP=127.0.0.1:8088 \
+BULBULATOR_DATA=./data BULBULATOR_STATE=./data \
+python3 bulbulator.py
+```
+
+Otwórz <http://127.0.0.1:8088/>. Kliknij **Zaznacz rurkę** na każdej karcie i przeciągnij prostokąt wokół jasnej rurki.
+
+## Instalacja (jako usługa)
+
+```sh
+git clone https://github.com/myshak1/bulbulator.git
+cd bulbulator
+sudo ./install.sh
+```
+
+Potem wpisz swoją kamerę w `/etc/systemd/system/bulbulator.service` i uruchom usługę ponownie:
+
+```sh
+sudo nano /etc/systemd/system/bulbulator.service
+sudo systemctl daemon-reload && sudo systemctl restart bulbulator
+```
+
+Strona jest pod adresem `http://<adres-urządzenia>:8088/`.
+
+### Ustawienia (zmienne środowiskowe)
+
+| Zmienna | Domyślnie | Znaczenie |
+|---|---|---|
+| `BULBULATOR_STREAM` | `http://127.0.0.1:8090/stream` | adres MJPEG albo kamera: `0` / `/dev/video0` |
+| `BULBULATOR_JARS` | `2` | liczba rurek (1–4) |
+| `BULBULATOR_HTTP` | *(wyłączony)* | adres wbudowanego serwera WWW, np. `0.0.0.0:8088` |
+| `BULBULATOR_AUTH` | *(brak)* | login do wbudowanego serwera, `użytkownik:hasło` |
+| `BULBULATOR_DATA` | `/var/lib/bulbulator` | ustawienia, historia i liczniki |
+| `BULBULATOR_STATE` | `/run/bulbulator` | stan na żywo i obraz (najlepiej w RAM) |
+| `BULBULATOR_WEB` | `./web` | katalog z `index.html` |
+| `BULBULATOR_FPS` | `15` | ile klatek na sekundę analizować |
+
+### Bezpieczeństwo
+
+Wbudowany serwer **domyślnie nie ma logowania**. Jeśli sieć nie jest zaufana, ustaw `BULBULATOR_AUTH` albo adres `127.0.0.1`. Do dostępu z internetu użyj nginx z HTTPS: przykład jest w [`deploy/nginx-bulbulator.conf`](deploy/nginx-bulbulator.conf) (z hasłem, pod adresem `/bulbulator/`).
+
+## Jak liczyć dokładnie
+
+- Kamera i gąsiory **nieruchomo**, **stałe światło** (lampka LED, bez słońca przesuwającego się po rurkach).
+- **Ciemne tło** za rurką i prostokąt obejmujący **tylko rurkę z wodą** dają najwyraźniejsze szczyty.
+- Patrz na mały wykres pod licznikiem: każdy bąbel powinien być szczytem ponad przerywaną linią.
+  - Bąble giną: zmniejsz czułość tej rurki.
+  - Liczy za dużo: zwiększ czułość.
+- Policz bąble ręcznie przez minutę i porównaj z polem *Bąbli/min*.
+- Najłatwiej wykryć rurki trzyczęściowe (z pływającym kapturkiem).
+
+## Pliki
+
+| Ścieżka | Zawartość |
+|---|---|
+| `DATA/config.json` | obszary rurek, nazwy, czułość (zapisuje je strona) |
+| `DATA/historia_min.csv` | `czas_unix,liczba1,liczba2,…` co minutę (ostatnie 48 h) |
+| `DATA/historia_godz.csv` | to samo co godzinę (cała historia) |
+| `DATA/liczniki.json` | liczniki łączne |
+| `STATE/stan.json`, `STATE/snapshot.jpg` | stan na żywo i obraz z kamery dla strony |
+
+## Licencja
+
+[MIT](LICENSE)

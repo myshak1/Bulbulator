@@ -1,0 +1,468 @@
+<!doctype html>
+<html lang="pl"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Bulbulator</title>
+<style>
+:root{--bg:#0f172a;--panel:#1e293b;--line:#334155;--txt:#e2e8f0;--mut:#94a3b8;--acc:#38bdf8;--red:#dc2626}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--txt);font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
+header{background:var(--panel);border-bottom:1px solid var(--line)}
+nav{max-width:1280px;margin:0 auto;padding:10px 16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+nav h1{font-size:19px;margin:0;letter-spacing:.3px}nav h1 small{font-weight:500;font-size:13px;margin-left:6px}
+nav .sp{flex:1}
+.flagi{display:flex;gap:6px}
+.flagi button{background:none;border:2px solid transparent;border-radius:5px;padding:2px;cursor:pointer;line-height:0;opacity:.45}
+.flagi button:hover{opacity:.8}.flagi button.on{opacity:1;border-color:var(--acc)}
+.flagi svg{width:30px;height:20px;display:block;border-radius:2px}
+main{max-width:1280px;margin:0 auto;padding:12px 16px 40px}
+.mut,small{color:var(--mut)}
+.bar{display:flex;flex-wrap:wrap;gap:14px;align-items:flex-end;background:var(--panel);padding:12px;border-radius:10px;margin:12px 0}
+.bar label{display:flex;flex-direction:column;font-size:13px;color:var(--mut);min-width:200px;flex:1;gap:4px}
+.bar label.chk{flex-direction:row;align-items:center;flex:0 0 auto;min-width:0;color:var(--txt);font-size:14px}
+button.b{background:var(--line);color:var(--txt);border:0;border-radius:8px;padding:8px 14px;font:inherit;font-size:14px;cursor:pointer}
+button.b:hover{filter:brightness(1.2)}button.del{background:var(--red)}
+[hidden]{display:none!important}
+.bk-karty{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:12px;margin:12px 0}
+.bk-karta{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px}
+.bk-nag{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.bk-kol{width:12px;height:12px;border-radius:3px;flex:none}
+.bk-nazwa{flex:1;background:transparent;border:1px solid transparent;color:var(--txt);font-size:16px;font-weight:600;padding:2px 4px;border-radius:6px;min-width:0}
+.bk-nazwa:hover,.bk-nazwa:focus{border-color:var(--line);outline:none}
+.bk-st{font-size:12px;color:var(--mut);white-space:nowrap}
+.bk-gl{display:flex;align-items:baseline;gap:8px;margin:4px 0 10px}
+.bk-gl b{font-size:40px;line-height:1;font-variant-numeric:tabular-nums}
+.bk-sia{display:grid;grid-template-columns:repeat(3,1fr);gap:8px 12px;font-size:13px}
+.bk-sia div{display:flex;flex-direction:column}.bk-sia span{color:var(--mut);font-size:12px}
+.bk-sia strong{font-variant-numeric:tabular-nums;font-weight:600}
+.bk-syg{width:100%;height:70px;display:block;margin:10px 0 6px;background:#0b1220;border-radius:6px}
+.bk-cz{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--mut);margin:8px 0 10px}.bk-cz input{flex:1}.bk-cz b{color:var(--txt);min-width:28px}
+.bk-prz{display:flex;gap:8px;flex-wrap:wrap}
+.bk-obraz{position:relative;width:100%;max-width:1280px;margin:0 auto;touch-action:none;user-select:none;border-radius:10px;overflow:hidden;background:#000;min-height:120px}
+.bk-obraz img{width:100%;display:block;-webkit-user-drag:none}
+.bk-ramka{position:absolute;border:2px solid;border-radius:4px;box-shadow:0 0 0 1px #000a}
+.bk-ramka span{position:absolute;left:0;top:-1px;transform:translateY(-100%);font-size:12px;padding:1px 6px;border-radius:4px 4px 0 0;color:#fff;white-space:nowrap}
+.bk-obraz.obr span.bk-et{transform:translateY(-100%) rotate(180deg)}
+.bk-obraz.tryb{cursor:crosshair;outline:3px solid var(--acc)}
+.bk-wyk{position:relative;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px}
+.bk-wyk canvas{width:100%;height:280px;display:block}
+.bk-leg{display:flex;gap:16px;flex-wrap:wrap;font-size:13px;color:var(--txt);margin-bottom:6px;align-items:center}
+.bk-leg i{display:inline-block;width:14px;height:3px;border-radius:2px;vertical-align:middle;margin-right:6px}
+.bk-tip{position:absolute;pointer-events:none;background:#0b1220;border:1px solid var(--line);border-radius:8px;padding:8px 10px;font-size:12px;color:var(--txt);white-space:nowrap;display:none;z-index:3}
+.bk-tip i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:6px;vertical-align:-1px}
+.bk-zak{display:flex;gap:4px;flex-wrap:wrap}.bk-zak button.on{background:var(--acc);color:#0b1220}
+.bk-tab{width:100%;border-collapse:collapse;font-size:14px}
+.bk-tab th,.bk-tab td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--line);white-space:nowrap}
+.bk-tab th{color:var(--mut);font-weight:600}
+.bk-tab td:not(:first-child),.bk-tab th:not(:first-child){text-align:right;font-variant-numeric:tabular-nums}
+footer{max-width:1280px;margin:0 auto;padding:0 16px 24px;font-size:12px;color:var(--mut)}footer a{color:inherit}
+</style></head>
+<body>
+<header><nav>
+  <h1>🍷 Bulbulator <small class="mut" id="wersja">v1</small></h1>
+  <span class="mut" style="font-size:13px" data-t="sub"></span>
+  <span class="sp"></span>
+  <div class="flagi" role="group" aria-label="Language">
+    <button type="button" data-lang="pl" title="Polski" aria-label="Polski"><svg viewBox="0 0 16 10"><rect width="16" height="5" fill="#fff"/><rect y="5" width="16" height="5" fill="#dc143c"/></svg></button>
+    <button type="button" data-lang="en" title="English" aria-label="English"><svg viewBox="0 0 60 30"><clipPath id="uk1"><path d="M0,0v30h60V0z"/></clipPath><clipPath id="uk2"><path d="M30,15h30v15zv15H0zH0V0zV0h30z"/></clipPath><g clip-path="url(#uk1)"><path d="M0,0v30h60V0z" fill="#012169"/><path d="M0,0 60,30M60,0 0,30" stroke="#fff" stroke-width="6"/><path d="M0,0 60,30M60,0 0,30" clip-path="url(#uk2)" stroke="#C8102E" stroke-width="4"/><path d="M30,0v30M0,15h60" stroke="#fff" stroke-width="10"/><path d="M30,0v30M0,15h60" stroke="#C8102E" stroke-width="6"/></g></svg></button>
+  </div>
+</nav></header>
+<main>
+<p class="mut" id="bkInfo" data-t="connecting"></p>
+<div class="bk-karty" id="bkKarty"></div>
+
+<h3 style="margin:22px 0 8px"><span data-t="history"></span> <small data-t="perMinute"></small></h3>
+<div class="bar" style="margin-top:0">
+  <div class="bk-zak" id="bkZak">
+    <button class="b" data-z="6h">6 h</button><button class="b" data-z="24h">24 h</button><button class="b" data-z="48h">48 h</button>
+    <button class="b" data-z="7d" data-t="r7d"></button><button class="b" data-z="all" data-t="rAll"></button>
+  </div>
+  <span class="mut" style="flex:1;text-align:right;font-size:13px"><span data-t="data"></span> <a href="historia_min.csv" style="color:inherit" data-t="csvMin"></a> · <a href="historia_godz.csv" style="color:inherit" data-t="csvHour"></a></span>
+</div>
+<div class="bk-wyk">
+  <div class="bk-leg" id="bkLeg"></div>
+  <canvas id="bkCanvas"></canvas>
+  <div class="bk-tip" id="bkTip"></div>
+</div>
+
+<h3 style="margin:22px 0 8px" data-t="stats"></h3>
+<div class="bar" style="display:block;overflow-x:auto;margin-top:0"><table class="bk-tab" id="bkTab"></table></div>
+
+<h3 style="margin:22px 0 8px"><span data-t="areas"></span> <small id="bkPodp" data-t="areasHint"></small></h3>
+<div class="bk-obraz" id="bkObraz"><img id="bkImg" alt=""></div>
+
+<h3 style="margin:22px 0 8px" data-t="settings"></h3>
+<div class="bar" style="margin-top:0">
+  <label><span><span data-t="minGap"></span> <b id="bkPrV"></b> s</span><input type="range" id="bkPr" min="0.1" max="2" step="0.05"></label>
+  <label class="chk"><input type="checkbox" id="bkObr"> <span data-t="rotate"></span></label>
+  <button class="b" id="bkZapisz" data-t="save"></button>
+</div>
+<p class="mut" style="font-size:13px" data-t="tips"></p>
+</main>
+<footer><a href="https://github.com/myshak1/bulbulator">github.com/myshak1/bulbulator</a></footer>
+<script>
+(() => {
+/* ---------- translations ---------- */
+const TXT = {
+  pl: {
+    sub: 'licznik bąbli fermentacji', connecting: 'Łączenie z licznikiem…',
+    running: 'Licznik działa · analiza {fps} klatek/s · aktualizacja {time}',
+    noData: 'Brak danych z licznika (usługa nie działa albo kamera jest odłączona).',
+    history: 'Historia', perMinute: '(bąbli na minutę)', r7d: '7 dni', rAll: 'Całość',
+    data: 'Dane:', csvMin: 'minutowe (CSV)', csvHour: 'godzinowe (CSV)',
+    stats: 'Statystyki fermentacji', areas: 'Obszary rurek',
+    areasHint: '(kliknij „Zaznacz rurkę” przy gąsiorze i przeciągnij prostokąt na obrazie)',
+    areasDrag: '— przeciągnij prostokąt wokół rurki: {name}', areasSaved: '— zapisano obszar: {name}',
+    areasSmall: '(za mały prostokąt, spróbuj ponownie)', imgAlt: 'Obraz z kamery do zaznaczania rurek',
+    settings: 'Ustawienia', minGap: 'Min. odstęp między bąblami:', rotate: 'Obróć obraz o 180°',
+    save: 'Zapisz ustawienia', saved: 'Zapisano ✓', saveFail: 'Nie udało się zapisać ustawień ({e}).',
+    tips: 'Wskazówki: kamera i gąsiory nieruchomo, stałe światło (lampka LED), ciemne tło za rurką i prostokąt obejmujący tylko rurkę z wodą. Wykres pod licznikiem pokazuje sygnał (linia) i próg (przerywana): każdy bąbel powinien być szczytem ponad progiem. Jeśli bąble giną, zmniejsz czułość tego gąsiora; jeśli liczy za dużo, zwiększ.',
+    jar: 'Gąsior {n}', bps: 'bąbli/s', avg10: '(średnio z 10 s)', perMin: 'Bąbli/min', perHour: 'Bąbli/godz.',
+    instant: 'Chwilowo', last: 'Ostatni bąbel', total: 'Łącznie', since: 'Liczone od',
+    mark: 'Zaznacz rurkę', reset: 'Zeruj licznik', resetQ: 'Wyzerować licznik łączny: {name}?',
+    sens: 'Czułość', sensHint: 'mniej = łapie słabsze', stCounting: '● liczy', stMark: 'zaznacz rurkę', stNoData: 'brak danych',
+    nameAria: 'Nazwa gąsiora', sigAria: 'Sygnał wykrywania na żywo', chartAria: 'Wykres liczby bąbli na minutę w czasie',
+    sAgo: '{n} s temu', minAgo: '{n} min temu', empty: 'Brak danych w tym zakresie — historia zapisuje się co minutę.',
+    none: 'brak danych', rowNow: 'Teraz (ostatnia minuta)', rowHour: 'Średnio, ostatnia godzina', rowDay: 'Średnio, ostatnie 24 h',
+    rowMax: 'Najwięcej w godzinie (7 dni)', rowTrend: 'Trend (6 h do poprzednich 6 h)', rowTotal: 'Bąbli łącznie', rowTime: 'Czas liczenia',
+    trNone: '→ brak bąbli', trSteady: '→ stabilnie', trUp: '↑ przyspiesza (+{p}%)', trDown: '↓ zwalnia ({p}%)', days: '{d} d {h} h'
+  },
+  en: {
+    sub: 'fermentation bubble counter', connecting: 'Connecting to the counter…',
+    running: 'Counter running · analysing {fps} frames/s · updated {time}',
+    noData: 'No data from the counter (the service is not running or the camera is disconnected).',
+    history: 'History', perMinute: '(bubbles per minute)', r7d: '7 days', rAll: 'All',
+    data: 'Data:', csvMin: 'per minute (CSV)', csvHour: 'per hour (CSV)',
+    stats: 'Fermentation statistics', areas: 'Airlock areas',
+    areasHint: '(click “Mark airlock” on a jar card and drag a rectangle on the image)',
+    areasDrag: '— drag a rectangle around the airlock: {name}', areasSaved: '— area saved: {name}',
+    areasSmall: '(rectangle too small, try again)', imgAlt: 'Camera image for marking the airlocks',
+    settings: 'Settings', minGap: 'Min. time between bubbles:', rotate: 'Rotate image 180°',
+    save: 'Save settings', saved: 'Saved ✓', saveFail: 'Could not save the settings ({e}).',
+    tips: 'Tips: keep the camera and jars still, use steady light (an LED lamp), a dark background behind the airlock and a rectangle that covers only the airlock with water. The chart under each counter shows the signal (line) and the threshold (dashed): every bubble should be a peak above the threshold. If bubbles are missed, lower that jar’s sensitivity; if it counts too many, raise it.',
+    jar: 'Jar {n}', bps: 'bubbles/s', avg10: '(10 s average)', perMin: 'Bubbles/min', perHour: 'Bubbles/hour',
+    instant: 'Instant', last: 'Last bubble', total: 'Total', since: 'Counting since',
+    mark: 'Mark airlock', reset: 'Reset counter', resetQ: 'Reset the total counter: {name}?',
+    sens: 'Sensitivity', sensHint: 'lower = catches weaker', stCounting: '● counting', stMark: 'mark the airlock', stNoData: 'no data',
+    nameAria: 'Jar name', sigAria: 'Live detection signal', chartAria: 'Chart of bubbles per minute over time',
+    sAgo: '{n} s ago', minAgo: '{n} min ago', empty: 'No data in this range yet — history is saved every minute.',
+    none: 'no data', rowNow: 'Now (last minute)', rowHour: 'Average, last hour', rowDay: 'Average, last 24 h',
+    rowMax: 'Busiest hour (7 days)', rowTrend: 'Trend (last 6 h vs previous 6 h)', rowTotal: 'Total bubbles', rowTime: 'Counting time',
+    trNone: '→ no bubbles', trSteady: '→ steady', trUp: '↑ speeding up (+{p}%)', trDown: '↓ slowing down ({p}%)', days: '{d} d {h} h'
+  }
+};
+function jezykStartowy() {
+  const q = new URLSearchParams(location.search).get('lang');
+  if (q && TXT[q]) return q;
+  try { const s = localStorage.getItem('bulbulator-lang'); if (s && TXT[s]) return s; } catch (e) {}
+  return (navigator.language || '').toLowerCase().startsWith('pl') ? 'pl' : 'en';
+}
+const LANG = jezykStartowy(), LOC = LANG === 'pl' ? 'pl-PL' : 'en-GB';
+const t = (k, v = {}) => (TXT[LANG][k] ?? k).replace(/\{(\w+)\}/g, (_, x) => v[x] ?? '');
+document.documentElement.lang = LANG;
+document.querySelectorAll('[data-t]').forEach(e => e.textContent = t(e.dataset.t));
+document.querySelectorAll('.flagi button').forEach(b => {
+  b.classList.toggle('on', b.dataset.lang === LANG);
+  b.onclick = () => { try { localStorage.setItem('bulbulator-lang', b.dataset.lang); } catch (e) {} const u = new URL(location.href); u.searchParams.delete('lang'); location.href = u.toString(); };
+});
+
+/* ---------- state ---------- */
+const g = id => document.getElementById(id);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const KOLORY = ['#3987e5', '#d95926', '#199e70', '#c98500'];   // colour-blind safe on a dark background
+let cfg = {gasiory: [], czulosc: 4, przerwa_min: 0.35};
+let N = 0, stan = null, hist = null, zakres = '24h', zaznaczam = -1, rys = null, os = {w: 1280, h: 720};
+let statDane = {min: [], godz: []}, punkty = null;
+const liczba = (v, m = 1) => v == null ? '–' : (+v).toLocaleString(LOC, {maximumFractionDigits: m});
+const nazwa = i => { const n = (cfg.gasiory[i] || {}).nazwa || ''; const m = /^(Gąsior|Jar) (\d)$/.exec(n); return m ? t('jar', {n: m[2]}) : n; };
+g('bkImg').alt = t('imgAlt'); g('bkCanvas').setAttribute('aria-label', t('chartAria'));
+
+/* ---------- config ---------- */
+async function wczytajCfg() {
+  try {
+    const r = await fetch('config.json?t=' + Date.now(), {cache: 'no-store'});
+    if (r.ok) { const c = await r.json(); if (c && Array.isArray(c.gasiory) && c.gasiory.length) cfg = c; }
+  } catch (e) {}
+  if (!cfg.gasiory.length) cfg.gasiory = [1, 2].map(n => ({nazwa: `Gąsior ${n}`, roi: null, reset: 0}));
+  cfg.gasiory = cfg.gasiory.slice(0, 4);
+  N = cfg.gasiory.length;
+  if (typeof cfg.obrot !== 'boolean') {   // older installs kept this setting in the browser
+    try { cfg.obrot = JSON.parse(localStorage.getItem('kamera') || '{}').obr === true; } catch (e) { cfg.obrot = false; }
+  }
+  g('bkPr').value = cfg.przerwa_min ?? 0.35; g('bkPrV').textContent = g('bkPr').value;
+  g('bkObr').checked = cfg.obrot;
+  budujKarty(); stosujObrot(); rysujRamki();
+}
+async function zapiszCfg() {
+  try {
+    const r = await fetch('config.json', {method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(cfg)});
+    if (!r.ok) throw new Error(r.status);
+    return true;
+  } catch (e) { alert(t('saveFail', {e: e.message})); return false; }
+}
+g('bkPr').oninput = () => g('bkPrV').textContent = g('bkPr').value;
+g('bkZapisz').onclick = async () => {
+  cfg.przerwa_min = +g('bkPr').value; cfg.obrot = g('bkObr').checked; stosujObrot(); rysujRamki();
+  if (await zapiszCfg()) { g('bkZapisz').textContent = t('saved'); setTimeout(() => g('bkZapisz').textContent = t('save'), 1500); }
+};
+
+/* ---------- live cards ---------- */
+function budujKarty() {
+  g('bkKarty').innerHTML = cfg.gasiory.map((gs, i) => {
+    const cz = gs.czulosc ?? cfg.czulosc ?? 4;
+    return `
+  <div class="bk-karta" style="border-top:3px solid ${KOLORY[i]}">
+    <div class="bk-nag"><span class="bk-kol" style="background:${KOLORY[i]}"></span>
+      <input class="bk-nazwa" id="bkN${i}" value="${esc(nazwa(i))}" maxlength="40" aria-label="${esc(t('nameAria'))}">
+      <span class="bk-st" id="bkS${i}"></span></div>
+    <div class="bk-gl"><b id="bkBps${i}">–</b><span class="mut">${t('bps')} <small>${t('avg10')}</small></span></div>
+    <div class="bk-sia">
+      <div><span>${t('perMin')}</span><strong id="bkBpm${i}">–</strong></div>
+      <div><span>${t('perHour')}</span><strong id="bkBph${i}">–</strong></div>
+      <div><span>${t('instant')}</span><strong id="bkCh${i}">–</strong></div>
+      <div><span>${t('last')}</span><strong id="bkOst${i}">–</strong></div>
+      <div><span>${t('total')}</span><strong id="bkLa${i}">–</strong></div>
+      <div><span>${t('since')}</span><strong id="bkOd${i}">–</strong></div>
+    </div>
+    <canvas class="bk-syg" id="bkSyg${i}" aria-label="${esc(t('sigAria'))}"></canvas>
+    <label class="bk-cz">${t('sens')} <b id="bkCzV${i}">${cz}</b><input type="range" id="bkCz${i}" min="0.5" max="12" step="0.5" value="${cz}"><small>${t('sensHint')}</small></label>
+    <div class="bk-prz">
+      <button class="b" id="bkZ${i}">${t('mark')}</button>
+      <button class="b del" id="bkR${i}">${t('reset')}</button>
+    </div>
+  </div>`; }).join('');
+  cfg.gasiory.forEach((gs, i) => {
+    g('bkN' + i).onchange = async e => { cfg.gasiory[i].nazwa = e.target.value.trim() || `Gąsior ${i + 1}`; await zapiszCfg(); rysujRamki(); rysujLegende(); rysujTabele(); };
+    g('bkCz' + i).oninput = e => g('bkCzV' + i).textContent = e.target.value;
+    g('bkCz' + i).onchange = async e => { cfg.gasiory[i].czulosc = +e.target.value; await zapiszCfg(); };
+    g('bkZ' + i).onclick = () => {
+      zaznaczam = zaznaczam === i ? -1 : i;
+      g('bkObraz').classList.toggle('tryb', zaznaczam >= 0);
+      g('bkPodp').textContent = zaznaczam >= 0 ? t('areasDrag', {name: nazwa(i)}) : t('areasHint');
+      if (zaznaczam >= 0) g('bkObraz').scrollIntoView({behavior: 'smooth', block: 'center'});
+    };
+    g('bkR' + i).onclick = async () => {
+      if (!confirm(t('resetQ', {name: nazwa(i)}))) return;
+      cfg.gasiory[i].reset = Date.now() / 1000; await zapiszCfg();
+    };
+  });
+}
+function kiedy(ts) {
+  if (!ts) return '–';
+  const d = Math.max(0, Date.now() / 1000 - ts);
+  if (d < 60) return t('sAgo', {n: Math.round(d)});
+  if (d < 3600) return t('minAgo', {n: Math.round(d / 60)});
+  return new Date(ts * 1000).toLocaleString(LOC, {day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit'});
+}
+async function odswiezStan() {
+  if (document.hidden || !N) return;
+  try {
+    const r = await fetch('stan.json?t=' + Date.now(), {cache: 'no-store'});
+    if (!r.ok) throw 0;
+    stan = await r.json();
+  } catch (e) { stan = null; }
+  const swiezy = stan && Date.now() / 1000 - stan.t < 10;
+  if (stan && stan.wersja) g('wersja').textContent = 'v' + String(stan.wersja).replace(/^\D+/, '');
+  g('bkInfo').textContent = swiezy ? t('running', {fps: liczba(stan.fps), time: new Date(stan.t * 1000).toLocaleTimeString(LOC)}) : t('noData');
+  for (let i = 0; i < N; i++) {
+    const s = swiezy && stan.gasiory[i];
+    g('bkS' + i).textContent = !s ? t('stNoData') : (s.aktywny ? t('stCounting') : t('stMark'));
+    g('bkBps' + i).textContent = s && s.aktywny ? liczba(s.bps, 2) : '–';
+    g('bkBpm' + i).textContent = s && s.aktywny ? liczba(s.bpm, 0) : '–';
+    g('bkBph' + i).textContent = s && s.aktywny ? liczba(s.bph, 0) : '–';
+    g('bkCh' + i).textContent = s && s.odstep ? `${liczba(1 / s.odstep, 2)}/s` : '–';
+    g('bkOst' + i).textContent = s ? kiedy(s.ostatni) : '–';
+    g('bkLa' + i).textContent = s ? liczba(s.lacznie, 0) : '–';
+    g('bkOd' + i).textContent = s ? new Date(s.od * 1000).toLocaleDateString(LOC) : '–';
+    rysujSygnal(g('bkSyg' + i), s ? s.sygnal : [], KOLORY[i]);
+  }
+  rysujTabele();
+}
+function przygotuj(cv) {
+  const dpr = window.devicePixelRatio || 1, w = cv.clientWidth, h = cv.clientHeight;
+  if (cv.width !== Math.round(w * dpr) || cv.height !== Math.round(h * dpr)) { cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr); }
+  const c = cv.getContext('2d'); c.setTransform(dpr, 0, 0, dpr, 0, 0); c.clearRect(0, 0, w, h);
+  return [c, w, h];
+}
+function rysujSygnal(cv, dane, kolor) {
+  const [c, w, h] = przygotuj(cv);
+  if (!dane || dane.length < 2) return;
+  const t1 = dane[dane.length - 1][0], t0 = t1 - 10;
+  const max = Math.max(1, ...dane.map(d => Math.max(d[1], d[2]))) * 1.15;
+  const X = x => (x - t0) / 10 * w, Y = v => h - 4 - v / max * (h - 8);
+  c.setLineDash([4, 4]); c.strokeStyle = '#94a3b8'; c.lineWidth = 1; c.beginPath();
+  dane.forEach((d, k) => k ? c.lineTo(X(d[0]), Y(d[2])) : c.moveTo(X(d[0]), Y(d[2]))); c.stroke();
+  c.setLineDash([]); c.strokeStyle = kolor; c.lineWidth = 2; c.lineJoin = 'round'; c.beginPath();
+  dane.forEach((d, k) => k ? c.lineTo(X(d[0]), Y(d[1])) : c.moveTo(X(d[0]), Y(d[1]))); c.stroke();
+}
+
+/* ---------- marking airlocks on the image ---------- */
+const obraz = g('bkObraz'), img = g('bkImg');
+function stosujObrot() { obraz.style.transform = cfg.obrot ? 'rotate(180deg)' : ''; obraz.classList.toggle('obr', !!cfg.obrot); }
+img.onload = () => { os = {w: img.naturalWidth || 1280, h: img.naturalHeight || 720}; rysujRamki(); };
+function odswiezObraz() { if (document.hidden || rys) return; const n = new Image(); n.onload = () => { img.src = n.src; }; n.src = 'snapshot.jpg?t=' + Date.now(); }
+function ramka(r, i, tymcz) {
+  const d = document.createElement('div'); d.className = 'bk-ramka';
+  d.style.cssText = `left:${r[0] / os.w * 100}%;top:${r[1] / os.h * 100}%;width:${r[2] / os.w * 100}%;height:${r[3] / os.h * 100}%;border-color:${KOLORY[i]}` + (tymcz ? ';border-style:dashed' : '');
+  d.innerHTML = `<span class="bk-et" style="background:${KOLORY[i]}">${esc(nazwa(i))}</span>`;
+  return d;
+}
+function rysujRamki(tymcz) {
+  obraz.querySelectorAll('.bk-ramka').forEach(e => e.remove());
+  cfg.gasiory.forEach((gs, i) => { if (gs.roi && !(tymcz && tymcz.i === i)) obraz.appendChild(ramka(gs.roi, i)); });
+  if (tymcz) obraz.appendChild(ramka(tymcz.r, tymcz.i, true));
+}
+function lokalnie(e) {
+  const r = obraz.getBoundingClientRect();
+  let x = e.clientX - r.left, y = e.clientY - r.top;
+  if (cfg.obrot) { x = r.width - x; y = r.height - y; }
+  return [Math.max(0, Math.min(os.w, x / r.width * os.w)), Math.max(0, Math.min(os.h, y / r.height * os.h))];
+}
+obraz.addEventListener('pointerdown', e => { if (zaznaczam < 0) return; rys = {p: lokalnie(e)}; obraz.setPointerCapture(e.pointerId); e.preventDefault(); });
+obraz.addEventListener('pointermove', e => {
+  if (!rys) return; const q = lokalnie(e), p = rys.p;
+  rys.r = [Math.min(p[0], q[0]), Math.min(p[1], q[1]), Math.abs(q[0] - p[0]), Math.abs(q[1] - p[1])].map(Math.round);
+  rysujRamki({i: zaznaczam, r: rys.r});
+});
+obraz.addEventListener('pointerup', async () => {
+  if (!rys) return; const r = rys.r; rys = null;
+  const i = zaznaczam, ok = r && r[2] >= 8 && r[3] >= 8;
+  if (ok) { cfg.gasiory[i].roi = r; await zapiszCfg(); }
+  zaznaczam = -1; obraz.classList.remove('tryb');
+  g('bkPodp').textContent = ok ? t('areasSaved', {name: nazwa(i)}) : t('areasSmall');
+  rysujRamki();
+});
+
+/* ---------- history ---------- */
+function parsuj(txt) { return txt.split('\n').map(l => l.split(',').map(Number)).filter(a => a.length >= 2 && a.every(Number.isFinite)); }
+async function wczytajHist() {
+  const plik = ['7d', 'all'].includes(zakres) ? 'historia_godz.csv' : 'historia_min.csv';
+  try { const r = await fetch(plik + '?t=' + Date.now(), {cache: 'no-store'}); hist = {plik, wiersze: r.ok ? parsuj(await r.text()) : []}; }
+  catch (e) { hist = {plik, wiersze: []}; }
+  rysujWykres();
+}
+async function wczytajStatystyki() {
+  const [m, h] = await Promise.all(['historia_min.csv', 'historia_godz.csv'].map(p =>
+    fetch(p + '?t=' + Date.now(), {cache: 'no-store'}).then(r => r.ok ? r.text() : '').catch(() => '')));
+  statDane = {min: parsuj(m), godz: parsuj(h)}; rysujTabele();
+}
+g('bkZak').querySelectorAll('button').forEach(b => b.onclick = () => { zakres = b.dataset.z; zaznaczZakres(); wczytajHist(); });
+function zaznaczZakres() { g('bkZak').querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.z === zakres)); }
+
+function koszyki() {
+  if (!hist || !hist.wiersze.length) return null;
+  const krok = hist.plik === 'historia_godz.csv' ? 3600 : 60;
+  const teraz = Date.now() / 1000, w = hist.wiersze;
+  const zakresS = {'6h': 6 * 3600, '24h': 86400, '48h': 2 * 86400, '7d': 7 * 86400}[zakres] || (teraz - w[0][0] + krok);
+  const start = Math.floor((teraz - zakresS) / krok) * krok;
+  const nKrokow = Math.ceil((teraz - start) / krok), grupa = Math.max(1, Math.ceil(nKrokow / 240)), dl = krok * grupa;
+  const mapa = new Map();
+  for (const r of w) {
+    if (r[0] < start) continue;
+    const k = Math.floor((r[0] - start) / dl), e = mapa.get(k) || {n: 0, s: new Array(N).fill(0)};
+    e.n++; for (let i = 0; i < N; i++) e.s[i] += r[i + 1] || 0; mapa.set(k, e);
+  }
+  const pkt = [];
+  for (let k = 0; k * dl + start < teraz; k++) {
+    const e = mapa.get(k);
+    pkt.push({t: start + k * dl + dl / 2, v: e ? e.s.map(s => s / (e.n * krok / 60)) : new Array(N).fill(null)});
+  }
+  return {pkt, start, koniec: teraz};
+}
+function ladnyMax(v) { if (v <= 0) return 1; const p = Math.pow(10, Math.floor(Math.log10(v))); for (const m of [1, 2, 2.5, 5, 10]) if (m * p >= v) return m * p; return 10 * p; }
+function rysujLegende() { g('bkLeg').innerHTML = cfg.gasiory.map((gs, i) => `<span><i style="background:${KOLORY[i]}"></i>${esc(nazwa(i))}</span>`).join(''); }
+function rysujWykres() {
+  rysujLegende();
+  const cv = g('bkCanvas'), [c, w, h] = przygotuj(cv);
+  const mut = '#94a3b8', line = '#334155', txt = '#e2e8f0';
+  const d = koszyki(); punkty = null;
+  c.font = '12px system-ui,sans-serif';
+  if (!d || !d.pkt.some(p => p.v.some(v => v != null))) { c.fillStyle = mut; c.fillText(t('empty'), 12, h / 2); return; }
+  const L = 44, R = 96, T = 10, B = 24, pw = w - L - R, ph = h - T - B;
+  const ymax = ladnyMax(Math.max(...d.pkt.flatMap(p => p.v.filter(v => v != null))) * 1.1);
+  const X = x => L + (x - d.start) / (d.koniec - d.start) * pw, Y = v => T + ph - v / ymax * ph;
+  c.strokeStyle = line; c.lineWidth = 1; c.fillStyle = mut; c.textAlign = 'right'; c.textBaseline = 'middle';
+  for (let k = 0; k <= 4; k++) { const v = ymax * k / 4, y = Math.round(Y(v)) + .5; c.beginPath(); c.moveTo(L, y); c.lineTo(L + pw, y); c.stroke(); c.fillText(liczba(v, 1), L - 6, y); }
+  c.textAlign = 'center'; c.textBaseline = 'top';
+  const zakresS = d.koniec - d.start, nEt = Math.max(2, Math.floor(pw / 90));
+  for (let k = 0; k <= nEt; k++) {
+    const x = d.start + zakresS * k / nEt, dt = new Date(x * 1000);
+    c.fillText(zakresS > 2.5 * 86400 ? dt.toLocaleDateString(LOC, {day: '2-digit', month: '2-digit'}) : dt.toLocaleTimeString(LOC, {hour: '2-digit', minute: '2-digit'}), X(x), T + ph + 6);
+  }
+  const konce = [];
+  for (let i = 0; i < N; i++) {
+    c.strokeStyle = KOLORY[i]; c.lineWidth = 2; c.lineJoin = 'round'; c.lineCap = 'round'; c.beginPath();
+    let ciag = false, ost = null;
+    for (const p of d.pkt) { const v = p.v[i]; if (v == null) { ciag = false; continue; } const x = X(p.t), y = Y(v); ciag ? c.lineTo(x, y) : c.moveTo(x, y); ciag = true; ost = {x, y, v, i}; }
+    c.stroke();
+    if (ost) konce.push(ost);
+  }
+  konce.sort((a, b) => a.y - b.y);   // direct labels at the line ends, spaced so they do not overlap
+  let poprz = -1e9;
+  for (const o of konce) {
+    const ly = Math.min(T + ph, Math.max(T, Math.max(o.y, poprz + 14))); poprz = ly;
+    c.fillStyle = KOLORY[o.i]; c.beginPath(); c.arc(o.x, o.y, 4, 0, 7); c.fill();
+    c.fillStyle = txt; c.textAlign = 'left'; c.textBaseline = 'middle'; c.fillText(`${liczba(o.v, 1)}/min`, o.x + 8, ly);
+  }
+  punkty = {d, X, Y, L, pw, T, ph};
+}
+const wyk = g('bkCanvas'), tip = g('bkTip');
+wyk.addEventListener('pointermove', e => {
+  if (!punkty) return; const r = wyk.getBoundingClientRect(), x = e.clientX - r.left;
+  if (x < punkty.L || x > punkty.L + punkty.pw) { tip.style.display = 'none'; rysujWykres(); return; }
+  let best = null; for (const p of punkty.d.pkt) { const dx = Math.abs(punkty.X(p.t) - x); if (!best || dx < best.dx) best = {dx, p}; }
+  rysujWykres(); const c = wyk.getContext('2d'), bx = punkty.X(best.p.t);
+  c.strokeStyle = '#94a3b8'; c.lineWidth = 1; c.beginPath(); c.moveTo(bx, punkty.T); c.lineTo(bx, punkty.T + punkty.ph); c.stroke();
+  best.p.v.forEach((v, i) => { if (v == null) return; c.fillStyle = KOLORY[i]; c.strokeStyle = '#1e293b'; c.lineWidth = 2; c.beginPath(); c.arc(bx, punkty.Y(v), 5, 0, 7); c.fill(); c.stroke(); });
+  tip.innerHTML = `<div class="mut" style="margin-bottom:4px">${new Date(best.p.t * 1000).toLocaleString(LOC, {day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit'})}</div>` +
+    cfg.gasiory.map((gs, i) => `<div><i style="background:${KOLORY[i]}"></i>${esc(nazwa(i))}: <b>${best.p.v[i] == null ? t('none') : liczba(best.p.v[i], 1) + ' /min'}</b></div>`).join('');
+  tip.style.display = 'block';
+  tip.style.left = (bx + 24 + tip.offsetWidth > r.width ? bx - tip.offsetWidth - 12 : bx + 24) + 'px'; tip.style.top = (e.clientY - r.top + 20) + 'px';
+});
+wyk.addEventListener('pointerleave', () => { tip.style.display = 'none'; rysujWykres(); });
+
+/* ---------- statistics ---------- */
+function srednia(wiersze, i, odT, doT, krok) {
+  const w = wiersze.filter(r => r[0] >= odT && r[0] < doT); if (!w.length) return null;
+  return w.reduce((s, r) => s + (r[i + 1] || 0), 0) / (w.length * krok / 60);
+}
+function rysujTabele() {
+  if (!N) return;
+  const teraz = Date.now() / 1000, m = statDane.min, h = statDane.godz;
+  const wiersz = (opis, f) => `<tr><td>${opis}</td>${cfg.gasiory.map((gs, i) => `<td>${f(i)}</td>`).join('')}</tr>`;
+  const s = i => stan && stan.gasiory && stan.gasiory[i];
+  const trend = i => {
+    const a = srednia(m, i, teraz - 6 * 3600, teraz, 60), b = srednia(m, i, teraz - 12 * 3600, teraz - 6 * 3600, 60);
+    if (a == null || b == null) return '–';
+    if (b < 0.05 && a < 0.05) return t('trNone');
+    const p = (a - b) / Math.max(b, 0.01) * 100;
+    return Math.abs(p) < 10 ? t('trSteady') : (p > 0 ? t('trUp', {p: Math.round(p)}) : t('trDown', {p: Math.round(p)}));
+  };
+  const maks = i => {
+    const w = h.filter(r => r[0] > teraz - 7 * 86400); if (!w.length) return '–';
+    const x = w.reduce((a, r) => (r[i + 1] || 0) > (a[i + 1] || 0) ? r : a);
+    return `${liczba((x[i + 1] || 0) / 60, 1)}/min <small class="mut">(${new Date(x[0] * 1000).toLocaleString(LOC, {day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit'})})</small>`;
+  };
+  const czas = i => { const x = s(i); if (!x) return '–'; const d = teraz - x.od; return t('days', {d: Math.floor(d / 86400), h: Math.floor(d % 86400 / 3600)}); };
+  g('bkTab').innerHTML = `<tr><th></th>${cfg.gasiory.map((gs, i) => `<th><span class="bk-kol" style="display:inline-block;background:${KOLORY[i]};margin-right:6px;vertical-align:-1px"></span>${esc(nazwa(i))}</th>`).join('')}</tr>` +
+    wiersz(t('rowNow'), i => s(i) ? `${liczba(s(i).bpm, 0)}/min` : '–') +
+    wiersz(t('rowHour'), i => { if (!s(i)) return '–'; const min = Math.max(1, Math.min(3600, stan.t - (stan.start || 0)) / 60); return `${liczba(s(i).bph / min, 1)}/min`; }) +
+    wiersz(t('rowDay'), i => { const v = srednia(m, i, teraz - 86400, teraz, 60); return v == null ? '–' : `${liczba(v, 1)}/min`; }) +
+    wiersz(t('rowMax'), maks) +
+    wiersz(t('rowTrend'), trend) +
+    wiersz(t('rowTotal'), i => s(i) ? liczba(s(i).lacznie, 0) : '–') +
+    wiersz(t('rowTime'), czas);
+}
+
+/* ---------- refresh loops ---------- */
+function wszystko() { odswiezObraz(); wczytajHist(); wczytajStatystyki(); odswiezStan(); }
+document.addEventListener('visibilitychange', () => { if (!document.hidden) wszystko(); });
+setInterval(odswiezStan, 1000);
+setInterval(odswiezObraz, 5000);
+setInterval(() => { if (!document.hidden) { wczytajHist(); wczytajStatystyki(); } }, 60000);
+window.addEventListener('resize', rysujWykres);
+zaznaczZakres();
+wczytajCfg().then(wszystko);
+})();
+</script>
+</body></html>
