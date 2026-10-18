@@ -101,6 +101,12 @@ Wbudowany serwer **domyślnie nie ma logowania**. Jeśli sieć nie jest zaufana,
 | `DATA/liczniki.json` | liczniki łączne |
 | `STATE/stan.json`, `STATE/snapshot.jpg` | stan na żywo i obraz z kamery dla strony |
 
+## O projekcie
+
+Bulbulator powstał przy dwóch gąsiorach domowego wina stojących na półce i kamerze USB, która już na nie patrzyła. Zamiast liczyć bąble ze stoperem, teraz robi to kamera, przez całą dobę. Tempo bąblowania to prosty sposób, żeby śledzić, jak fermentacja rusza, osiąga szczyt i zwalnia, i ocenić, kiedy dobiega końca.
+
+Działa na małym domowym serwerze (Radxa ROCK Pi 4B+ z tanią kamerą USB), ale nada się każdy komputer z Linuksem i kamerą. Autor: **Kris, SP2KMO**, krótkofalowiec i domowy winiarz. Pomysły, zgłoszenia błędów i pull requesty są mile widziane.
+
 ## Licencja
 
 [MIT](LICENSE)

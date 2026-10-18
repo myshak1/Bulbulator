@@ -101,6 +101,12 @@ The built-in server has **no login by default** — set `BULBULATOR_AUTH` or bin
 
 File and JSON key names are Polish (*gąsior* = carboy, *bąbel* = bubble).
 
+## About
+
+Bulbulator started with two carboys of homemade wine on a shelf and a USB camera already watching them. Instead of counting bubbles with a stopwatch, the camera now does it around the clock — the bubble rate is a simple way to follow how fermentation starts, peaks and slows down, and to tell when it is close to finished.
+
+It runs on a small home server (a Radxa ROCK Pi 4B+ with a cheap USB camera), but any Linux computer with a camera will do. Made by **Kris, SP2KMO** — radio amateur and home winemaker. Ideas, bug reports and pull requests are welcome.
+
 ## License
 
 [MIT](LICENSE)
