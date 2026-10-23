@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Bulbulator - https://github.com/myshak1/Bulbulator
+# Copyright (c) 2026 Kris SP2KMO
+# SPDX-License-Identifier: MIT
 """Fake MJPEG camera with two bubbling airlocks - for trying Bulbulator without a camera.
 
     python3 tools/fake_stream.py            # http://127.0.0.1:8090/stream

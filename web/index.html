@@ -1,66 +1,110 @@
 <!doctype html>
+<!--
+  Bulbulator - fermentation airlock bubble counter
+  https://github.com/myshak1/Bulbulator
+  Copyright (c) 2026 Kris SP2KMO
+  SPDX-License-Identifier: MIT
+-->
 <html lang="pl"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex,nofollow">
+<meta name="author" content="Kris SP2KMO">
 <title>Bulbulator</title>
 <style>
-:root{--bg:#0f172a;--panel:#1e293b;--line:#334155;--txt:#e2e8f0;--mut:#94a3b8;--acc:#38bdf8;--red:#dc2626}
+:root{--bg:#0f172a;--panel:#1e293b;--panel2:#162032;--line:#334155;--txt:#e2e8f0;--mut:#94a3b8;--acc:#38bdf8;--red:#dc2626;--ok:#22c55e}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--txt);font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
-header{background:var(--panel);border-bottom:1px solid var(--line)}
-nav{max-width:1280px;margin:0 auto;padding:10px 16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
-nav h1{font-size:19px;margin:0;letter-spacing:.3px}nav h1 small{font-weight:500;font-size:13px;margin-left:6px}
+header{background:var(--panel);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5}
+nav{max-width:1440px;margin:0 auto;padding:8px 16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+nav h1{font-size:19px;margin:0;letter-spacing:.3px;white-space:nowrap}nav h1 small{font-weight:500;font-size:13px;margin-left:6px}
 nav .sp{flex:1}
+.pill{display:inline-flex;align-items:center;gap:6px;font-size:13px;padding:3px 10px;border-radius:99px;background:var(--panel2);border:1px solid var(--line);color:var(--mut);white-space:nowrap}
+.pill i{width:8px;height:8px;border-radius:50%;background:var(--mut)}
+.pill.on{color:var(--txt)}.pill.on i{background:var(--ok);box-shadow:0 0 0 0 #22c55e88;animation:puls 2s infinite}
+.pill.off i{background:var(--red)}
+@keyframes puls{70%{box-shadow:0 0 0 7px #22c55e00}100%{box-shadow:0 0 0 0 #22c55e00}}
 .flagi{display:flex;gap:6px}
 .flagi button{background:none;border:2px solid transparent;border-radius:5px;padding:2px;cursor:pointer;line-height:0;opacity:.45}
 .flagi button:hover{opacity:.8}.flagi button.on{opacity:1;border-color:var(--acc)}
 .flagi svg{width:30px;height:20px;display:block;border-radius:2px}
-main{max-width:1280px;margin:0 auto;padding:12px 16px 40px}
+main{max-width:1440px;margin:0 auto;padding:14px 16px 32px}
 .mut,small{color:var(--mut)}
-.bar{display:flex;flex-wrap:wrap;gap:14px;align-items:flex-end;background:var(--panel);padding:12px;border-radius:10px;margin:12px 0}
-.bar label{display:flex;flex-direction:column;font-size:13px;color:var(--mut);min-width:200px;flex:1;gap:4px}
-.bar label.chk{flex-direction:row;align-items:center;flex:0 0 auto;min-width:0;color:var(--txt);font-size:14px}
-button.b{background:var(--line);color:var(--txt);border:0;border-radius:8px;padding:8px 14px;font:inherit;font-size:14px;cursor:pointer}
-button.b:hover{filter:brightness(1.2)}button.del{background:var(--red)}
 [hidden]{display:none!important}
-.bk-karty{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:12px;margin:12px 0}
-.bk-karta{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px}
-.bk-nag{display:flex;align-items:center;gap:8px;margin-bottom:8px}
-.bk-kol{width:12px;height:12px;border-radius:3px;flex:none}
+button.b{background:var(--line);color:var(--txt);border:0;border-radius:8px;padding:7px 12px;font:inherit;font-size:14px;cursor:pointer;white-space:nowrap}
+button.b:hover{filter:brightness(1.2)}button.b.del{background:var(--red)}
+button.b.mini{padding:5px 10px;font-size:13px}
+button.b.obrys{background:transparent;border:1px solid var(--line)}button.b.obrys.del{border-color:#dc262688;color:#fca5a5}
+button.b.on{background:var(--acc);color:#0b1220}
+
+/* layout: camera + history on the left, live counters on the right */
+.uklad{display:grid;gap:14px;grid-template-columns:minmax(0,1fr);grid-template-areas:"cam" "prawa" "hist"}
+@media (min-width:1000px){.uklad{grid-template-columns:minmax(0,1.7fr) minmax(320px,1fr);grid-template-rows:auto 1fr;grid-template-areas:"cam prawa" "hist prawa"}}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px 14px;min-width:0}
+.p-nag{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px}
+.p-nag h2{font-size:16px;margin:0}
+.p-nag .sp{flex:1}
+#cam{grid-area:cam}#prawa{grid-area:prawa;display:grid;gap:14px;align-content:start;min-width:0}#hist{grid-area:hist;align-self:start}
+section.sek{margin-top:14px}
+
+/* camera */
+.bk-obraz{position:relative;width:100%;touch-action:none;user-select:none;border-radius:8px;overflow:hidden;background:#000;aspect-ratio:16/9}
+.bk-obraz img{width:100%;height:100%;object-fit:contain;display:block;-webkit-user-drag:none}
+.bk-obraz .brak{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--mut);font-size:14px;text-align:center;padding:16px}
+.bk-ramka{position:absolute;border:2px solid var(--k);border-radius:4px;box-shadow:0 0 0 1px #000a}
+.bk-ramka span{position:absolute;left:-2px;top:-2px;transform:translateY(-100%);font-size:12px;padding:1px 6px;border-radius:4px 4px 0 0;color:#fff;white-space:nowrap;background:var(--k);font-variant-numeric:tabular-nums}
+.bk-ramka.blysk{animation:blysk .8s ease-out}
+@keyframes blysk{0%{background:color-mix(in srgb,var(--k) 55%,transparent);box-shadow:0 0 0 1px #000a,0 0 18px 4px var(--k)}100%{background:transparent;box-shadow:0 0 0 1px #000a}}
+.bk-obraz.obr span.bk-et{transform:translateY(-100%) rotate(180deg)}
+.bk-obraz.tryb{cursor:crosshair;outline:3px solid var(--acc);outline-offset:-3px}
+.bk-podp{font-size:13px;margin:8px 0 0}
+.bk-podp.tryb{color:var(--acc);font-weight:600}
+
+/* live cards */
+.bk-karty{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));align-content:start}
+@media (min-width:1000px){.bk-karty{grid-template-columns:1fr}}
+.bk-karta{background:var(--panel);border:1px solid var(--line);border-top:3px solid var(--k);border-radius:12px;padding:12px 14px}
+.bk-nag{display:flex;align-items:center;gap:8px;margin-bottom:4px}
+.bk-kol{width:12px;height:12px;border-radius:3px;flex:none;background:var(--k)}
+.bk-karta.blysk .bk-kol{animation:kropka .8s ease-out}
+@keyframes kropka{0%{transform:scale(1.9);box-shadow:0 0 10px var(--k)}100%{transform:none}}
 .bk-nazwa{flex:1;background:transparent;border:1px solid transparent;color:var(--txt);font-size:16px;font-weight:600;padding:2px 4px;border-radius:6px;min-width:0}
 .bk-nazwa:hover,.bk-nazwa:focus{border-color:var(--line);outline:none}
 .bk-st{font-size:12px;color:var(--mut);white-space:nowrap}
-.bk-gl{display:flex;align-items:baseline;gap:8px;margin:4px 0 10px}
-.bk-gl b{font-size:40px;line-height:1;font-variant-numeric:tabular-nums}
-.bk-sia{display:grid;grid-template-columns:repeat(3,1fr);gap:8px 12px;font-size:13px}
-.bk-sia div{display:flex;flex-direction:column}.bk-sia span{color:var(--mut);font-size:12px}
-.bk-sia strong{font-variant-numeric:tabular-nums;font-weight:600}
-.bk-syg{width:100%;height:70px;display:block;margin:10px 0 6px;background:#0b1220;border-radius:6px}
-.bk-cz{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--mut);margin:8px 0 10px}.bk-cz input{flex:1}.bk-cz b{color:var(--txt);min-width:28px}
-.bk-prz{display:flex;gap:8px;flex-wrap:wrap}
-.bk-obraz{position:relative;width:100%;max-width:1280px;margin:0 auto;touch-action:none;user-select:none;border-radius:10px;overflow:hidden;background:#000;min-height:120px}
-.bk-obraz img{width:100%;display:block;-webkit-user-drag:none}
-.bk-ramka{position:absolute;border:2px solid;border-radius:4px;box-shadow:0 0 0 1px #000a}
-.bk-ramka span{position:absolute;left:0;top:-1px;transform:translateY(-100%);font-size:12px;padding:1px 6px;border-radius:4px 4px 0 0;color:#fff;white-space:nowrap}
-.bk-obraz.obr span.bk-et{transform:translateY(-100%) rotate(180deg)}
-.bk-obraz.tryb{cursor:crosshair;outline:3px solid var(--acc)}
-.bk-wyk{position:relative;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px}
-.bk-wyk canvas{width:100%;height:280px;display:block}
+.bk-gl{display:flex;align-items:baseline;gap:8px;margin:2px 0 8px}
+.bk-gl b{font-size:38px;line-height:1;font-variant-numeric:tabular-nums}
+.bk-sia{display:grid;grid-template-columns:repeat(3,1fr);gap:6px 12px;font-size:13px}
+.bk-sia div{display:flex;flex-direction:column;min-width:0}.bk-sia span{color:var(--mut);font-size:12px}
+.bk-sia strong{font-variant-numeric:tabular-nums;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bk-syg{width:100%;height:56px;display:block;margin:10px 0 6px;background:#0b1220;border-radius:6px}
+.bk-dol{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.bk-cz{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--mut);flex:1;min-width:180px}.bk-cz input{flex:1;min-width:60px}.bk-cz b{color:var(--txt);min-width:26px}
+
+/* history + statistics */
+.bk-wyk{position:relative}
+.bk-wyk canvas{width:100%;height:240px;display:block}
 .bk-leg{display:flex;gap:16px;flex-wrap:wrap;font-size:13px;color:var(--txt);margin-bottom:6px;align-items:center}
 .bk-leg i{display:inline-block;width:14px;height:3px;border-radius:2px;vertical-align:middle;margin-right:6px}
 .bk-tip{position:absolute;pointer-events:none;background:#0b1220;border:1px solid var(--line);border-radius:8px;padding:8px 10px;font-size:12px;color:var(--txt);white-space:nowrap;display:none;z-index:3}
 .bk-tip i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:6px;vertical-align:-1px}
-.bk-zak{display:flex;gap:4px;flex-wrap:wrap}.bk-zak button.on{background:var(--acc);color:#0b1220}
-.bk-tab{width:100%;border-collapse:collapse;font-size:14px}
-.bk-tab th,.bk-tab td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--line);white-space:nowrap}
+.bk-zak{display:flex;gap:4px;flex-wrap:wrap}
+.csv{font-size:13px;width:100%;text-align:right;margin-top:6px}.csv a{color:inherit}
+.tab-wrap{overflow-x:auto}
+.bk-tab{width:100%;border-collapse:collapse;font-size:13px}
+.bk-tab th,.bk-tab td{text-align:left;padding:6px 6px;border-bottom:1px solid var(--line);white-space:nowrap}
+.bk-tab tr:last-child td{border-bottom:0}
+.bk-tab td:first-child{white-space:normal;min-width:130px}.bk-tab td small{display:block}
 .bk-tab th{color:var(--mut);font-weight:600}
 .bk-tab td:not(:first-child),.bk-tab th:not(:first-child){text-align:right;font-variant-numeric:tabular-nums}
-footer{max-width:1280px;margin:0 auto;padding:0 16px 24px;font-size:12px;color:var(--mut)}footer a{color:inherit}
+.ust{display:flex;flex-wrap:wrap;gap:14px;align-items:flex-end}
+.ust label{display:flex;flex-direction:column;font-size:13px;color:var(--mut);min-width:220px;max-width:520px;flex:1;gap:4px}
+.tips{font-size:13px;margin:12px 0 0;line-height:1.5}
+footer{max-width:1440px;margin:0 auto;padding:0 16px 24px;font-size:12px;color:var(--mut);display:flex;gap:6px 14px;flex-wrap:wrap}footer a{color:inherit}
 </style></head>
 <body>
 <header><nav>
-  <h1>🍷 Bulbulator <small class="mut" id="wersja">v1</small></h1>
+  <h1>🍷 Bulbulator <small class="mut" id="wersja"></small></h1>
   <span class="mut" style="font-size:13px" data-t="sub"></span>
+  <span class="pill" id="bkLive"><i></i><span id="bkLiveT" data-t="connecting"></span></span>
   <span class="sp"></span>
   <div class="flagi" role="group" aria-label="Language">
     <button type="button" data-lang="pl" title="Polski" aria-label="Polski"><svg viewBox="0 0 16 10"><rect width="16" height="5" fill="#fff"/><rect y="5" width="16" height="5" fill="#dc143c"/></svg></button>
@@ -68,59 +112,87 @@ footer{max-width:1280px;margin:0 auto;padding:0 16px 24px;font-size:12px;color:v
   </div>
 </nav></header>
 <main>
-<p class="mut" id="bkInfo" data-t="connecting"></p>
-<div class="bk-karty" id="bkKarty"></div>
+<div class="uklad">
+  <section class="panel" id="cam">
+    <div class="p-nag">
+      <h2>📷 <span data-t="camera"></span></h2>
+      <small id="bkFotoT"></small>
+      <span class="sp"></span>
+      <button class="b mini obrys" id="bkObrBtn" data-t="rotateBtn"></button>
+    </div>
+    <div class="bk-obraz" id="bkObraz"><img id="bkImg" alt=""><div class="brak" id="bkBrak" data-t="noImage"></div></div>
+    <p class="bk-podp mut" id="bkPodp" data-t="areasHint"></p>
+  </section>
 
-<h3 style="margin:22px 0 8px"><span data-t="history"></span> <small data-t="perMinute"></small></h3>
-<div class="bar" style="margin-top:0">
-  <div class="bk-zak" id="bkZak">
-    <button class="b" data-z="6h">6 h</button><button class="b" data-z="24h">24 h</button><button class="b" data-z="48h">48 h</button>
-    <button class="b" data-z="7d" data-t="r7d"></button><button class="b" data-z="all" data-t="rAll"></button>
+  <div id="prawa">
+    <div class="bk-karty" id="bkKarty"></div>
+    <section class="panel">
+      <div class="p-nag">
+        <h2 data-t="stats"></h2>
+        <small id="bkOdKiedy"></small>
+        <span class="sp"></span>
+        <button class="b mini obrys del" id="bkNowa" data-t="newFerm"></button>
+      </div>
+      <div class="tab-wrap"><table class="bk-tab" id="bkTab"></table></div>
+    </section>
   </div>
-  <span class="mut" style="flex:1;text-align:right;font-size:13px"><span data-t="data"></span> <a href="historia_min.csv" style="color:inherit" data-t="csvMin"></a> · <a href="historia_godz.csv" style="color:inherit" data-t="csvHour"></a></span>
-</div>
-<div class="bk-wyk">
-  <div class="bk-leg" id="bkLeg"></div>
-  <canvas id="bkCanvas"></canvas>
-  <div class="bk-tip" id="bkTip"></div>
+
+  <section class="panel" id="hist">
+    <div class="p-nag">
+      <h2><span data-t="history"></span> <small data-t="perMinute"></small></h2>
+      <span class="sp"></span>
+      <div class="bk-zak" id="bkZak">
+        <button class="b mini" data-z="6h">6 h</button><button class="b mini" data-z="24h">24 h</button><button class="b mini" data-z="48h">48 h</button>
+        <button class="b mini" data-z="7d" data-t="r7d"></button><button class="b mini" data-z="all" data-t="rAll"></button>
+      </div>
+    </div>
+    <div class="bk-wyk">
+      <div class="bk-leg" id="bkLeg"></div>
+      <canvas id="bkCanvas"></canvas>
+      <div class="bk-tip" id="bkTip"></div>
+    </div>
+    <div class="csv mut"><span data-t="data"></span> <a href="historia_min.csv" data-t="csvMin"></a> · <a href="historia_godz.csv" data-t="csvHour"></a></div>
+  </section>
 </div>
 
-<h3 style="margin:22px 0 8px" data-t="stats"></h3>
-<div class="bar" style="display:block;overflow-x:auto;margin-top:0"><table class="bk-tab" id="bkTab"></table></div>
-
-<h3 style="margin:22px 0 8px"><span data-t="areas"></span> <small id="bkPodp" data-t="areasHint"></small></h3>
-<div class="bk-obraz" id="bkObraz"><img id="bkImg" alt=""></div>
-
-<h3 style="margin:22px 0 8px" data-t="settings"></h3>
-<div class="bar" style="margin-top:0">
-  <label><span><span data-t="minGap"></span> <b id="bkPrV"></b> s</span><input type="range" id="bkPr" min="0.1" max="2" step="0.05"></label>
-  <label class="chk"><input type="checkbox" id="bkObr"> <span data-t="rotate"></span></label>
-  <button class="b" id="bkZapisz" data-t="save"></button>
-</div>
-<p class="mut" style="font-size:13px" data-t="tips"></p>
+<section class="panel sek">
+  <div class="p-nag"><h2 data-t="settings"></h2></div>
+  <div class="ust">
+    <label><span><span data-t="minGap"></span> <b id="bkPrV"></b> s</span><input type="range" id="bkPr" min="0.1" max="2" step="0.05"></label>
+    <button class="b" id="bkZapisz" data-t="save"></button>
+  </div>
+  <p class="tips mut" data-t="tips"></p>
+</section>
 </main>
-<footer><a href="https://github.com/myshak1/bulbulator">github.com/myshak1/bulbulator</a></footer>
+<footer>
+  <span>© 2026 Kris SP2KMO</span>
+  <span data-t="license"></span>
+  <a href="https://github.com/myshak1/Bulbulator">github.com/myshak1/Bulbulator</a>
+</footer>
 <script>
+/* Bulbulator web page - Copyright (c) 2026 Kris SP2KMO - MIT License */
 (() => {
 /* ---------- translations ---------- */
 const TXT = {
   pl: {
-    sub: 'licznik bąbli fermentacji', connecting: 'Łączenie z licznikiem…',
-    running: 'Licznik działa · analiza {fps} klatek/s · aktualizacja {time}',
-    noData: 'Brak danych z licznika (usługa nie działa albo kamera jest odłączona).',
+    sub: 'licznik bąbli fermentacji', connecting: 'łączenie…', live: 'na żywo · {fps} kl./s', offline: 'brak danych z licznika',
+    camera: 'Kamera', imgAge: 'obraz sprzed {n} s', noImage: 'Czekam na obraz z kamery…', rotateBtn: '↻ Obróć 180°',
     history: 'Historia', perMinute: '(bąbli na minutę)', r7d: '7 dni', rAll: 'Całość',
     data: 'Dane:', csvMin: 'minutowe (CSV)', csvHour: 'godzinowe (CSV)',
-    stats: 'Statystyki fermentacji', areas: 'Obszary rurek',
-    areasHint: '(kliknij „Zaznacz rurkę” przy gąsiorze i przeciągnij prostokąt na obrazie)',
-    areasDrag: '— przeciągnij prostokąt wokół rurki: {name}', areasSaved: '— zapisano obszar: {name}',
-    areasSmall: '(za mały prostokąt, spróbuj ponownie)', imgAlt: 'Obraz z kamery do zaznaczania rurek',
-    settings: 'Ustawienia', minGap: 'Min. odstęp między bąblami:', rotate: 'Obróć obraz o 180°',
-    save: 'Zapisz ustawienia', saved: 'Zapisano ✓', saveFail: 'Nie udało się zapisać ustawień ({e}).',
-    tips: 'Wskazówki: kamera i gąsiory nieruchomo, stałe światło (lampka LED), ciemne tło za rurką i prostokąt obejmujący tylko rurkę z wodą. Wykres pod licznikiem pokazuje sygnał (linia) i próg (przerywana): każdy bąbel powinien być szczytem ponad progiem. Jeśli bąble giną, zmniejsz czułość tego gąsiora; jeśli liczy za dużo, zwiększ.',
+    stats: 'Statystyki fermentacji', fermSince: 'od {d}',
+    newFerm: '⟲ Nowa fermentacja', newFermQ: 'Zacząć nową fermentację?\n\nLiczniki wszystkich gąsiorów, historia i statystyki zaczną się od zera. Dotychczasowe dane zostaną zachowane na serwerze jako archiwum CSV.',
+    newFermBusy: 'Zeruję…', newFermDone: 'Wyzerowano ✓',
+    areasHint: 'Żeby zaznaczyć rurkę, kliknij „Zaznacz rurkę” na karcie gąsiora i przeciągnij prostokąt na obrazie.',
+    areasDrag: 'Przeciągnij prostokąt wokół rurki: {name}. Kliknij „Zaznacz rurkę” ponownie, żeby anulować.', areasSaved: 'Zapisano obszar: {name}.',
+    areasSmall: 'Za mały prostokąt, spróbuj ponownie.', imgAlt: 'Obraz z kamery z zaznaczonymi rurkami',
+    settings: 'Ustawienia', minGap: 'Min. odstęp między bąblami:',
+    save: 'Zapisz', saved: 'Zapisano ✓', saveFail: 'Nie udało się zapisać ustawień ({e}).',
+    tips: 'Wskazówki: kamera i gąsiory nieruchomo, stałe światło (lampka LED), ciemne tło za rurką i prostokąt obejmujący tylko rurkę z wodą. Ramka na obrazie mignie przy każdym policzonym bąblu. Wykres na karcie pokazuje sygnał (linia) i próg (przerywana): każdy bąbel powinien być szczytem ponad progiem. Jeśli bąble giną, zmniejsz czułość tego gąsiora; jeśli liczy za dużo, zwiększ.',
+    license: 'licencja MIT',
     jar: 'Gąsior {n}', bps: 'bąbli/s', avg10: '(średnio z 10 s)', perMin: 'Bąbli/min', perHour: 'Bąbli/godz.',
     instant: 'Chwilowo', last: 'Ostatni bąbel', total: 'Łącznie', since: 'Liczone od',
-    mark: 'Zaznacz rurkę', reset: 'Zeruj licznik', resetQ: 'Wyzerować licznik łączny: {name}?',
-    sens: 'Czułość', sensHint: 'mniej = łapie słabsze', stCounting: '● liczy', stMark: 'zaznacz rurkę', stNoData: 'brak danych',
+    mark: 'Zaznacz rurkę', markCancel: 'Anuluj', reset: 'Zeruj', resetT: 'Zeruj licznik tego gąsiora', resetQ: 'Wyzerować licznik łączny: {name}?',
+    sens: 'Czułość', sensT: 'mniej = łapie słabsze bąble', stCounting: '● liczy', stMark: 'zaznacz rurkę', stNoData: 'brak danych',
     nameAria: 'Nazwa gąsiora', sigAria: 'Sygnał wykrywania na żywo', chartAria: 'Wykres liczby bąbli na minutę w czasie',
     sAgo: '{n} s temu', minAgo: '{n} min temu', empty: 'Brak danych w tym zakresie — historia zapisuje się co minutę.',
     none: 'brak danych', rowNow: 'Teraz (ostatnia minuta)', rowHour: 'Średnio, ostatnia godzina', rowDay: 'Średnio, ostatnie 24 h',
@@ -128,22 +200,24 @@ const TXT = {
     trNone: '→ brak bąbli', trSteady: '→ stabilnie', trUp: '↑ przyspiesza (+{p}%)', trDown: '↓ zwalnia ({p}%)', days: '{d} d {h} h'
   },
   en: {
-    sub: 'fermentation bubble counter', connecting: 'Connecting to the counter…',
-    running: 'Counter running · analysing {fps} frames/s · updated {time}',
-    noData: 'No data from the counter (the service is not running or the camera is disconnected).',
+    sub: 'fermentation bubble counter', connecting: 'connecting…', live: 'live · {fps} fps', offline: 'no data from the counter',
+    camera: 'Camera', imgAge: 'image {n} s old', noImage: 'Waiting for the camera image…', rotateBtn: '↻ Rotate 180°',
     history: 'History', perMinute: '(bubbles per minute)', r7d: '7 days', rAll: 'All',
     data: 'Data:', csvMin: 'per minute (CSV)', csvHour: 'per hour (CSV)',
-    stats: 'Fermentation statistics', areas: 'Airlock areas',
-    areasHint: '(click “Mark airlock” on a jar card and drag a rectangle on the image)',
-    areasDrag: '— drag a rectangle around the airlock: {name}', areasSaved: '— area saved: {name}',
-    areasSmall: '(rectangle too small, try again)', imgAlt: 'Camera image for marking the airlocks',
-    settings: 'Settings', minGap: 'Min. time between bubbles:', rotate: 'Rotate image 180°',
-    save: 'Save settings', saved: 'Saved ✓', saveFail: 'Could not save the settings ({e}).',
-    tips: 'Tips: keep the camera and jars still, use steady light (an LED lamp), a dark background behind the airlock and a rectangle that covers only the airlock with water. The chart under each counter shows the signal (line) and the threshold (dashed): every bubble should be a peak above the threshold. If bubbles are missed, lower that jar’s sensitivity; if it counts too many, raise it.',
+    stats: 'Fermentation statistics', fermSince: 'since {d}',
+    newFerm: '⟲ New fermentation', newFermQ: 'Start a new fermentation?\n\nThe counters of all jars, the history and the statistics start from zero. The old data is kept on the server as a CSV archive.',
+    newFermBusy: 'Resetting…', newFermDone: 'Reset done ✓',
+    areasHint: 'To mark an airlock, click “Mark airlock” on a jar card and drag a rectangle on the image.',
+    areasDrag: 'Drag a rectangle around the airlock: {name}. Click “Mark airlock” again to cancel.', areasSaved: 'Area saved: {name}.',
+    areasSmall: 'Rectangle too small, try again.', imgAlt: 'Camera image with the marked airlocks',
+    settings: 'Settings', minGap: 'Min. time between bubbles:',
+    save: 'Save', saved: 'Saved ✓', saveFail: 'Could not save the settings ({e}).',
+    tips: 'Tips: keep the camera and jars still, use steady light (an LED lamp), a dark background behind the airlock and a rectangle that covers only the airlock with water. The frame on the image flashes for every counted bubble. The chart on each card shows the signal (line) and the threshold (dashed): every bubble should be a peak above the threshold. If bubbles are missed, lower that jar’s sensitivity; if it counts too many, raise it.',
+    license: 'MIT License',
     jar: 'Jar {n}', bps: 'bubbles/s', avg10: '(10 s average)', perMin: 'Bubbles/min', perHour: 'Bubbles/hour',
     instant: 'Instant', last: 'Last bubble', total: 'Total', since: 'Counting since',
-    mark: 'Mark airlock', reset: 'Reset counter', resetQ: 'Reset the total counter: {name}?',
-    sens: 'Sensitivity', sensHint: 'lower = catches weaker', stCounting: '● counting', stMark: 'mark the airlock', stNoData: 'no data',
+    mark: 'Mark airlock', markCancel: 'Cancel', reset: 'Reset', resetT: 'Reset this jar’s counter', resetQ: 'Reset the total counter: {name}?',
+    sens: 'Sensitivity', sensT: 'lower = catches weaker bubbles', stCounting: '● counting', stMark: 'mark the airlock', stNoData: 'no data',
     nameAria: 'Jar name', sigAria: 'Live detection signal', chartAria: 'Chart of bubbles per minute over time',
     sAgo: '{n} s ago', minAgo: '{n} min ago', empty: 'No data in this range yet — history is saved every minute.',
     none: 'no data', rowNow: 'Now (last minute)', rowHour: 'Average, last hour', rowDay: 'Average, last 24 h',
@@ -172,9 +246,10 @@ const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt
 const KOLORY = ['#3987e5', '#d95926', '#199e70', '#c98500'];   // colour-blind safe on a dark background
 let cfg = {gasiory: [], czulosc: 4, przerwa_min: 0.35};
 let N = 0, stan = null, hist = null, zakres = '24h', zaznaczam = -1, rys = null, os = {w: 1280, h: 720};
-let statDane = {min: [], godz: []}, punkty = null;
+let statDane = {min: [], godz: []}, punkty = null, fotoT = 0, ostatnie = [];
 const liczba = (v, m = 1) => v == null ? '–' : (+v).toLocaleString(LOC, {maximumFractionDigits: m});
 const nazwa = i => { const n = (cfg.gasiory[i] || {}).nazwa || ''; const m = /^(Gąsior|Jar) (\d)$/.exec(n); return m ? t('jar', {n: m[2]}) : n; };
+const dataGodz = ts => new Date(ts * 1000).toLocaleString(LOC, {day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit'});
 g('bkImg').alt = t('imgAlt'); g('bkCanvas').setAttribute('aria-label', t('chartAria'));
 
 /* ---------- config ---------- */
@@ -190,7 +265,6 @@ async function wczytajCfg() {
     try { cfg.obrot = JSON.parse(localStorage.getItem('kamera') || '{}').obr === true; } catch (e) { cfg.obrot = false; }
   }
   g('bkPr').value = cfg.przerwa_min ?? 0.35; g('bkPrV').textContent = g('bkPr').value;
-  g('bkObr').checked = cfg.obrot;
   budujKarty(); stosujObrot(); rysujRamki();
 }
 async function zapiszCfg() {
@@ -200,10 +274,28 @@ async function zapiszCfg() {
     return true;
   } catch (e) { alert(t('saveFail', {e: e.message})); return false; }
 }
+function potwierdz(btn, klucz) { btn.textContent = t('saved'); setTimeout(() => btn.textContent = t(klucz), 1500); }
 g('bkPr').oninput = () => g('bkPrV').textContent = g('bkPr').value;
-g('bkZapisz').onclick = async () => {
-  cfg.przerwa_min = +g('bkPr').value; cfg.obrot = g('bkObr').checked; stosujObrot(); rysujRamki();
-  if (await zapiszCfg()) { g('bkZapisz').textContent = t('saved'); setTimeout(() => g('bkZapisz').textContent = t('save'), 1500); }
+g('bkZapisz').onclick = async () => { cfg.przerwa_min = +g('bkPr').value; if (await zapiszCfg()) potwierdz(g('bkZapisz'), 'save'); };
+g('bkObrBtn').onclick = async () => { cfg.obrot = !cfg.obrot; stosujObrot(); rysujRamki(); await zapiszCfg(); };
+
+/* ---------- new fermentation: all counters and history start from zero ---------- */
+g('bkNowa').onclick = async () => {
+  if (!confirm(t('newFermQ'))) return;
+  const b = g('bkNowa');
+  cfg.reset_stat = Date.now() / 1000;
+  if (!await zapiszCfg()) return;
+  b.disabled = true; b.textContent = t('newFermBusy');
+  hist = {plik: hist ? hist.plik : 'historia_min.csv', wiersze: []}; statDane = {min: [], godz: []};
+  rysujWykres(); rysujTabele();
+  const czekaj = Date.now() + 15000;   // the counter picks the change up within a few seconds
+  const sprawdz = setInterval(() => {
+    if ((stan && (stan.reset_stat || 0) >= cfg.reset_stat - 1) || Date.now() > czekaj) {
+      clearInterval(sprawdz); b.disabled = false; b.textContent = t('newFermDone');
+      setTimeout(() => b.textContent = t('newFerm'), 2500);
+      wczytajHist(); wczytajStatystyki();
+    }
+  }, 1000);
 };
 
 /* ---------- live cards ---------- */
@@ -211,8 +303,8 @@ function budujKarty() {
   g('bkKarty').innerHTML = cfg.gasiory.map((gs, i) => {
     const cz = gs.czulosc ?? cfg.czulosc ?? 4;
     return `
-  <div class="bk-karta" style="border-top:3px solid ${KOLORY[i]}">
-    <div class="bk-nag"><span class="bk-kol" style="background:${KOLORY[i]}"></span>
+  <div class="bk-karta" id="bkK${i}" style="--k:${KOLORY[i]}">
+    <div class="bk-nag"><span class="bk-kol"></span>
       <input class="bk-nazwa" id="bkN${i}" value="${esc(nazwa(i))}" maxlength="40" aria-label="${esc(t('nameAria'))}">
       <span class="bk-st" id="bkS${i}"></span></div>
     <div class="bk-gl"><b id="bkBps${i}">–</b><span class="mut">${t('bps')} <small>${t('avg10')}</small></span></div>
@@ -225,35 +317,39 @@ function budujKarty() {
       <div><span>${t('since')}</span><strong id="bkOd${i}">–</strong></div>
     </div>
     <canvas class="bk-syg" id="bkSyg${i}" aria-label="${esc(t('sigAria'))}"></canvas>
-    <label class="bk-cz">${t('sens')} <b id="bkCzV${i}">${cz}</b><input type="range" id="bkCz${i}" min="0.5" max="12" step="0.5" value="${cz}"><small>${t('sensHint')}</small></label>
-    <div class="bk-prz">
-      <button class="b" id="bkZ${i}">${t('mark')}</button>
-      <button class="b del" id="bkR${i}">${t('reset')}</button>
+    <div class="bk-dol">
+      <label class="bk-cz" title="${esc(t('sensT'))}">${t('sens')} <b id="bkCzV${i}">${cz}</b><input type="range" id="bkCz${i}" min="0.5" max="12" step="0.5" value="${cz}"></label>
+      <button class="b mini" id="bkZ${i}">${t('mark')}</button>
+      <button class="b mini obrys del" id="bkR${i}" title="${esc(t('resetT'))}">${t('reset')}</button>
     </div>
   </div>`; }).join('');
   cfg.gasiory.forEach((gs, i) => {
     g('bkN' + i).onchange = async e => { cfg.gasiory[i].nazwa = e.target.value.trim() || `Gąsior ${i + 1}`; await zapiszCfg(); rysujRamki(); rysujLegende(); rysujTabele(); };
     g('bkCz' + i).oninput = e => g('bkCzV' + i).textContent = e.target.value;
     g('bkCz' + i).onchange = async e => { cfg.gasiory[i].czulosc = +e.target.value; await zapiszCfg(); };
-    g('bkZ' + i).onclick = () => {
-      zaznaczam = zaznaczam === i ? -1 : i;
-      g('bkObraz').classList.toggle('tryb', zaznaczam >= 0);
-      g('bkPodp').textContent = zaznaczam >= 0 ? t('areasDrag', {name: nazwa(i)}) : t('areasHint');
-      if (zaznaczam >= 0) g('bkObraz').scrollIntoView({behavior: 'smooth', block: 'center'});
-    };
+    g('bkZ' + i).onclick = () => ustawTryb(zaznaczam === i ? -1 : i);
     g('bkR' + i).onclick = async () => {
       if (!confirm(t('resetQ', {name: nazwa(i)}))) return;
       cfg.gasiory[i].reset = Date.now() / 1000; await zapiszCfg();
     };
   });
 }
+function ustawTryb(i, komunikat) {
+  zaznaczam = i;
+  g('bkObraz').classList.toggle('tryb', i >= 0);
+  g('bkPodp').classList.toggle('tryb', i >= 0);
+  g('bkPodp').textContent = komunikat || (i >= 0 ? t('areasDrag', {name: nazwa(i)}) : t('areasHint'));
+  cfg.gasiory.forEach((gs, k) => { const b = g('bkZ' + k); b.textContent = k === i ? t('markCancel') : t('mark'); b.classList.toggle('on', k === i); });
+  if (i >= 0 && g('bkObraz').getBoundingClientRect().top < 0) g('cam').scrollIntoView({behavior: 'smooth', block: 'start'});
+}
 function kiedy(ts) {
   if (!ts) return '–';
   const d = Math.max(0, Date.now() / 1000 - ts);
   if (d < 60) return t('sAgo', {n: Math.round(d)});
   if (d < 3600) return t('minAgo', {n: Math.round(d / 60)});
-  return new Date(ts * 1000).toLocaleString(LOC, {day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit'});
+  return dataGodz(ts);
 }
+function mignij(el) { if (!el) return; el.classList.remove('blysk'); void el.offsetWidth; el.classList.add('blysk'); }
 async function odswiezStan() {
   if (document.hidden || !N) return;
   try {
@@ -263,7 +359,8 @@ async function odswiezStan() {
   } catch (e) { stan = null; }
   const swiezy = stan && Date.now() / 1000 - stan.t < 10;
   if (stan && stan.wersja) g('wersja').textContent = 'v' + String(stan.wersja).replace(/^\D+/, '');
-  g('bkInfo').textContent = swiezy ? t('running', {fps: liczba(stan.fps), time: new Date(stan.t * 1000).toLocaleTimeString(LOC)}) : t('noData');
+  g('bkLive').className = 'pill ' + (swiezy ? 'on' : stan === null && !fotoT ? '' : 'off');
+  g('bkLiveT').textContent = swiezy ? t('live', {fps: liczba(stan.fps)}) : t('offline');
   for (let i = 0; i < N; i++) {
     const s = swiezy && stan.gasiory[i];
     g('bkS' + i).textContent = !s ? t('stNoData') : (s.aktywny ? t('stCounting') : t('stMark'));
@@ -273,9 +370,14 @@ async function odswiezStan() {
     g('bkCh' + i).textContent = s && s.odstep ? `${liczba(1 / s.odstep, 2)}/s` : '–';
     g('bkOst' + i).textContent = s ? kiedy(s.ostatni) : '–';
     g('bkLa' + i).textContent = s ? liczba(s.lacznie, 0) : '–';
-    g('bkOd' + i).textContent = s ? new Date(s.od * 1000).toLocaleDateString(LOC) : '–';
+    g('bkOd' + i).textContent = s ? dataGodz(s.od) : '–';
     rysujSygnal(g('bkSyg' + i), s ? s.sygnal : [], KOLORY[i]);
+    if (s && s.ostatni && ostatnie[i] && s.ostatni !== ostatnie[i]) {   // a new bubble since the last poll
+      mignij(g('bkK' + i)); mignij(g('bkObraz').querySelector(`.bk-ramka[data-i="${i}"]:not(.tymcz)`));
+    }
+    if (s) ostatnie[i] = s.ostatni;
   }
+  opisyRamek();
   rysujTabele();
 }
 function przygotuj(cv) {
@@ -296,21 +398,35 @@ function rysujSygnal(cv, dane, kolor) {
   dane.forEach((d, k) => k ? c.lineTo(X(d[0]), Y(d[1])) : c.moveTo(X(d[0]), Y(d[1]))); c.stroke();
 }
 
-/* ---------- marking airlocks on the image ---------- */
+/* ---------- camera image and the airlock areas ---------- */
 const obraz = g('bkObraz'), img = g('bkImg');
-function stosujObrot() { obraz.style.transform = cfg.obrot ? 'rotate(180deg)' : ''; obraz.classList.toggle('obr', !!cfg.obrot); }
-img.onload = () => { os = {w: img.naturalWidth || 1280, h: img.naturalHeight || 720}; rysujRamki(); };
-function odswiezObraz() { if (document.hidden || rys) return; const n = new Image(); n.onload = () => { img.src = n.src; }; n.src = 'snapshot.jpg?t=' + Date.now(); }
+function stosujObrot() {
+  obraz.style.transform = cfg.obrot ? 'rotate(180deg)' : ''; obraz.classList.toggle('obr', !!cfg.obrot);
+  g('bkObrBtn').classList.toggle('on', !!cfg.obrot);
+}
+img.onload = () => { os = {w: img.naturalWidth || 1280, h: img.naturalHeight || 720}; obraz.style.aspectRatio = `${os.w} / ${os.h}`; g('bkBrak').hidden = true; rysujRamki(); };
+function odswiezObraz() {
+  if (document.hidden || rys) return;
+  const n = new Image(); n.onload = () => { img.src = n.src; fotoT = Date.now(); wiekObrazu(); }; n.src = 'snapshot.jpg?t=' + Date.now();
+}
+function wiekObrazu() { g('bkFotoT').textContent = fotoT ? t('imgAge', {n: Math.round((Date.now() - fotoT) / 1000)}) : ''; }
 function ramka(r, i, tymcz) {
-  const d = document.createElement('div'); d.className = 'bk-ramka';
-  d.style.cssText = `left:${r[0] / os.w * 100}%;top:${r[1] / os.h * 100}%;width:${r[2] / os.w * 100}%;height:${r[3] / os.h * 100}%;border-color:${KOLORY[i]}` + (tymcz ? ';border-style:dashed' : '');
-  d.innerHTML = `<span class="bk-et" style="background:${KOLORY[i]}">${esc(nazwa(i))}</span>`;
+  const d = document.createElement('div'); d.className = 'bk-ramka' + (tymcz ? ' tymcz' : ''); d.dataset.i = i;
+  d.style.cssText = `--k:${KOLORY[i]};left:${r[0] / os.w * 100}%;top:${r[1] / os.h * 100}%;width:${r[2] / os.w * 100}%;height:${r[3] / os.h * 100}%` + (tymcz ? ';border-style:dashed' : '');
+  d.innerHTML = `<span class="bk-et"></span>`;
   return d;
+}
+function opisyRamek() {   // label = name + bubbles per minute
+  obraz.querySelectorAll('.bk-ramka').forEach(d => {
+    const i = +d.dataset.i, s = stan && stan.gasiory && stan.gasiory[i];
+    d.firstChild.textContent = nazwa(i) + (s && s.aktywny && !d.classList.contains('tymcz') ? ` · ${liczba(s.bpm, 0)}/min` : '');
+  });
 }
 function rysujRamki(tymcz) {
   obraz.querySelectorAll('.bk-ramka').forEach(e => e.remove());
   cfg.gasiory.forEach((gs, i) => { if (gs.roi && !(tymcz && tymcz.i === i)) obraz.appendChild(ramka(gs.roi, i)); });
   if (tymcz) obraz.appendChild(ramka(tymcz.r, tymcz.i, true));
+  opisyRamek();
 }
 function lokalnie(e) {
   const r = obraz.getBoundingClientRect();
@@ -328,23 +444,26 @@ obraz.addEventListener('pointerup', async () => {
   if (!rys) return; const r = rys.r; rys = null;
   const i = zaznaczam, ok = r && r[2] >= 8 && r[3] >= 8;
   if (ok) { cfg.gasiory[i].roi = r; await zapiszCfg(); }
-  zaznaczam = -1; obraz.classList.remove('tryb');
-  g('bkPodp').textContent = ok ? t('areasSaved', {name: nazwa(i)}) : t('areasSmall');
+  ustawTryb(-1, ok ? t('areasSaved', {name: nazwa(i)}) : t('areasSmall'));
   rysujRamki();
 });
 
 /* ---------- history ---------- */
-function parsuj(txt) { return txt.split('\n').map(l => l.split(',').map(Number)).filter(a => a.length >= 2 && a.every(Number.isFinite)); }
+function parsuj(txt, krok) {   // rows from before the last "new fermentation" are hidden
+  const od = cfg.reset_stat || 0;
+  return txt.split('\n').map(l => l.split(',').map(Number)).filter(a => a.length >= 2 && a.every(Number.isFinite) && a[0] + krok > od);
+}
 async function wczytajHist() {
   const plik = ['7d', 'all'].includes(zakres) ? 'historia_godz.csv' : 'historia_min.csv';
-  try { const r = await fetch(plik + '?t=' + Date.now(), {cache: 'no-store'}); hist = {plik, wiersze: r.ok ? parsuj(await r.text()) : []}; }
+  const krok = plik === 'historia_godz.csv' ? 3600 : 60;
+  try { const r = await fetch(plik + '?t=' + Date.now(), {cache: 'no-store'}); hist = {plik, wiersze: r.ok ? parsuj(await r.text(), krok) : []}; }
   catch (e) { hist = {plik, wiersze: []}; }
   rysujWykres();
 }
 async function wczytajStatystyki() {
   const [m, h] = await Promise.all(['historia_min.csv', 'historia_godz.csv'].map(p =>
     fetch(p + '?t=' + Date.now(), {cache: 'no-store'}).then(r => r.ok ? r.text() : '').catch(() => '')));
-  statDane = {min: parsuj(m), godz: parsuj(h)}; rysujTabele();
+  statDane = {min: parsuj(m, 60), godz: parsuj(h, 3600)}; rysujTabele();
 }
 g('bkZak').querySelectorAll('button').forEach(b => b.onclick = () => { zakres = b.dataset.z; zaznaczZakres(); wczytajHist(); });
 function zaznaczZakres() { g('bkZak').querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.z === zakres)); }
@@ -377,8 +496,8 @@ function rysujWykres() {
   const mut = '#94a3b8', line = '#334155', txt = '#e2e8f0';
   const d = koszyki(); punkty = null;
   c.font = '12px system-ui,sans-serif';
-  if (!d || !d.pkt.some(p => p.v.some(v => v != null))) { c.fillStyle = mut; c.fillText(t('empty'), 12, h / 2); return; }
-  const L = 44, R = 96, T = 10, B = 24, pw = w - L - R, ph = h - T - B;
+  if (!d || !d.pkt.some(p => p.v.some(v => v != null))) { c.fillStyle = mut; c.textAlign = 'left'; c.textBaseline = 'middle'; c.fillText(t('empty'), 12, h / 2); return; }
+  const L = 44, R = 84, T = 10, B = 24, pw = w - L - R, ph = h - T - B;
   const ymax = ladnyMax(Math.max(...d.pkt.flatMap(p => p.v.filter(v => v != null))) * 1.1);
   const X = x => L + (x - d.start) / (d.koniec - d.start) * pw, Y = v => T + ph - v / ymax * ph;
   c.strokeStyle = line; c.lineWidth = 1; c.fillStyle = mut; c.textAlign = 'right'; c.textBaseline = 'middle';
@@ -414,7 +533,7 @@ wyk.addEventListener('pointermove', e => {
   rysujWykres(); const c = wyk.getContext('2d'), bx = punkty.X(best.p.t);
   c.strokeStyle = '#94a3b8'; c.lineWidth = 1; c.beginPath(); c.moveTo(bx, punkty.T); c.lineTo(bx, punkty.T + punkty.ph); c.stroke();
   best.p.v.forEach((v, i) => { if (v == null) return; c.fillStyle = KOLORY[i]; c.strokeStyle = '#1e293b'; c.lineWidth = 2; c.beginPath(); c.arc(bx, punkty.Y(v), 5, 0, 7); c.fill(); c.stroke(); });
-  tip.innerHTML = `<div class="mut" style="margin-bottom:4px">${new Date(best.p.t * 1000).toLocaleString(LOC, {day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit'})}</div>` +
+  tip.innerHTML = `<div class="mut" style="margin-bottom:4px">${dataGodz(best.p.t)}</div>` +
     cfg.gasiory.map((gs, i) => `<div><i style="background:${KOLORY[i]}"></i>${esc(nazwa(i))}: <b>${best.p.v[i] == null ? t('none') : liczba(best.p.v[i], 1) + ' /min'}</b></div>`).join('');
   tip.style.display = 'block';
   tip.style.left = (bx + 24 + tip.offsetWidth > r.width ? bx - tip.offsetWidth - 12 : bx + 24) + 'px'; tip.style.top = (e.clientY - r.top + 20) + 'px';
@@ -431,6 +550,8 @@ function rysujTabele() {
   const teraz = Date.now() / 1000, m = statDane.min, h = statDane.godz;
   const wiersz = (opis, f) => `<tr><td>${opis}</td>${cfg.gasiory.map((gs, i) => `<td>${f(i)}</td>`).join('')}</tr>`;
   const s = i => stan && stan.gasiory && stan.gasiory[i];
+  const rs = Math.max(cfg.reset_stat || 0, (stan && stan.reset_stat) || 0);
+  g('bkOdKiedy').textContent = rs ? t('fermSince', {d: dataGodz(rs)}) : '';
   const trend = i => {
     const a = srednia(m, i, teraz - 6 * 3600, teraz, 60), b = srednia(m, i, teraz - 12 * 3600, teraz - 6 * 3600, 60);
     if (a == null || b == null) return '–';
@@ -441,12 +562,17 @@ function rysujTabele() {
   const maks = i => {
     const w = h.filter(r => r[0] > teraz - 7 * 86400); if (!w.length) return '–';
     const x = w.reduce((a, r) => (r[i + 1] || 0) > (a[i + 1] || 0) ? r : a);
-    return `${liczba((x[i + 1] || 0) / 60, 1)}/min <small class="mut">(${new Date(x[0] * 1000).toLocaleString(LOC, {day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit'})})</small>`;
+    return `${liczba((x[i + 1] || 0) / 60, 1)}/min <small class="mut">(${dataGodz(x[0])})</small>`;
   };
   const czas = i => { const x = s(i); if (!x) return '–'; const d = teraz - x.od; return t('days', {d: Math.floor(d / 86400), h: Math.floor(d % 86400 / 3600)}); };
-  g('bkTab').innerHTML = `<tr><th></th>${cfg.gasiory.map((gs, i) => `<th><span class="bk-kol" style="display:inline-block;background:${KOLORY[i]};margin-right:6px;vertical-align:-1px"></span>${esc(nazwa(i))}</th>`).join('')}</tr>` +
+  const godzina = i => {   // bubbles in the last hour, divided by the time actually counted
+    const x = s(i); if (!x) return '–';
+    const min = Math.max(1, Math.min(3600, stan.t - Math.max(stan.start || 0, x.od || 0)) / 60);
+    return `${liczba(x.bph / min, 1)}/min`;
+  };
+  g('bkTab').innerHTML = `<tr><th></th>${cfg.gasiory.map((gs, i) => `<th><span class="bk-kol" style="--k:${KOLORY[i]};display:inline-block;margin-right:6px;vertical-align:-1px"></span>${esc(nazwa(i))}</th>`).join('')}</tr>` +
     wiersz(t('rowNow'), i => s(i) ? `${liczba(s(i).bpm, 0)}/min` : '–') +
-    wiersz(t('rowHour'), i => { if (!s(i)) return '–'; const min = Math.max(1, Math.min(3600, stan.t - (stan.start || 0)) / 60); return `${liczba(s(i).bph / min, 1)}/min`; }) +
+    wiersz(t('rowHour'), godzina) +
     wiersz(t('rowDay'), i => { const v = srednia(m, i, teraz - 86400, teraz, 60); return v == null ? '–' : `${liczba(v, 1)}/min`; }) +
     wiersz(t('rowMax'), maks) +
     wiersz(t('rowTrend'), trend) +
@@ -458,7 +584,8 @@ function rysujTabele() {
 function wszystko() { odswiezObraz(); wczytajHist(); wczytajStatystyki(); odswiezStan(); }
 document.addEventListener('visibilitychange', () => { if (!document.hidden) wszystko(); });
 setInterval(odswiezStan, 1000);
-setInterval(odswiezObraz, 5000);
+setInterval(odswiezObraz, 2000);
+setInterval(wiekObrazu, 1000);
 setInterval(() => { if (!document.hidden) { wczytajHist(); wczytajStatystyki(); } }, 60000);
 window.addEventListener('resize', rysujWykres);
 zaznaczZakres();

@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Bulbulator - https://github.com/myshak1/Bulbulator
+# Copyright (c) 2026 Kris SP2KMO
+# SPDX-License-Identifier: MIT
 """Bulbulator - fermentation airlock bubble counter for a webcam.
 
 Watches one or more wine/beer airlocks through a camera, counts the bubbles
@@ -18,6 +21,10 @@ Files:
   DATA/historia_godz.csv   bubbles per hour    (whole history)
   DATA/liczniki.json       total counters (survive restarts)
 
+"New fermentation" on the page sets reset_stat in config.json: the counters of
+all airlocks go to zero and the history files are moved aside as
+historia_min-YYYYmmdd-HHMM.csv / historia_godz-YYYYmmdd-HHMM.csv.
+
 Optional built-in web server (BULBULATOR_HTTP=0.0.0.0:8088) serves the page
 and the files above, so nginx is not required.  JSON keys and file names are
 Polish for compatibility with existing installations.
@@ -35,7 +42,7 @@ import urllib.request
 import cv2
 import numpy as np
 
-VERSION = '1.1'
+VERSION = '1.2'
 HERE = os.path.dirname(os.path.abspath(__file__))
 
 STREAM = os.environ.get('BULBULATOR_STREAM', 'http://127.0.0.1:8090/stream')
@@ -60,6 +67,7 @@ DOMYSLNA = {
     'czulosc': 4.0,       # default sensitivity: how many "noise widths" a peak must have
     'przerwa_min': 0.35,  # minimum time between two bubbles in one airlock [s]
     'obrot': False,       # page only: show the camera image rotated by 180 degrees
+    'reset_stat': 0,      # time of the last "new fermentation" (all counters and history)
 }
 
 
@@ -94,6 +102,7 @@ def normalizuj_cfg(c):
     cfg['czulosc'] = min(max(liczba_lub(c.get('czulosc'), 4.0), 0.5), 20.0)
     cfg['przerwa_min'] = min(max(liczba_lub(c.get('przerwa_min'), 0.35), 0.05), 5.0)
     cfg['obrot'] = bool(c.get('obrot', False))
+    cfg['reset_stat'] = liczba_lub(c.get('reset_stat'), 0.0)
     zrodlo = c.get('gasiory') if isinstance(c.get('gasiory'), list) else []
     for i in range(N):
         g = zrodlo[i] if i < len(zrodlo) and isinstance(zrodlo[i], dict) else {}
@@ -214,17 +223,42 @@ def dopisz(sciezka, linia):
         f.write(linia + '\n')
 
 
+def czas_linii(linia):
+    """Time stamp of a history line, None for a broken line (e.g. NUL bytes after a power cut)."""
+    try:
+        return float(linia.split(',')[0])
+    except ValueError:
+        return None
+
+
 def przytnij_minuty(teraz):
     try:
-        with open(HIST_MIN) as f:
-            linie = [l for l in f if l.strip() and float(l.split(',')[0]) > teraz - 48 * 3600]
+        with open(HIST_MIN, errors='replace') as f:
+            linie = [l.replace('\0', '') for l in f]
+        dobre = [l for l in linie if l.strip() and (czas_linii(l) or 0) > teraz - 48 * 3600]
+        zle = sum(1 for l in linie if l.strip() and czas_linii(l) is None)
+        if zle:
+            log(f'history trim: skipped {zle} broken line(s)')
         with open(HIST_MIN + '.tmp', 'w') as f:
-            f.writelines(linie)
+            f.writelines(dobre)
         os.replace(HIST_MIN + '.tmp', HIST_MIN)
     except FileNotFoundError:
         pass
     except Exception as e:
         log('history trim:', e)
+
+
+def archiwizuj_historie(t):
+    """New fermentation: move the history files aside, the page starts with empty charts."""
+    znacznik = time.strftime('%Y%m%d-%H%M', time.localtime(t))
+    for sciezka in (HIST_MIN, HIST_GODZ):
+        if os.path.exists(sciezka):
+            cel = sciezka[:-4] + '-' + znacznik + '.csv'
+            try:
+                os.replace(sciezka, cel)
+                log('history archived:', cel)
+            except OSError as e:
+                log('history archive:', e)
 
 
 # ---------------------------------------------------------------- web server (optional)
@@ -327,6 +361,7 @@ def main():
     lacznie = lista('lacznie', 0)
     od = lista('od', time.time())
     reset_znany = lista('reset', 0)
+    reset_stat_znany = liczba_lub(licz.get('reset_stat'), 0.0)
 
     det = [Detektor() for _ in range(N)]
     teraz = start = time.time()
@@ -357,6 +392,19 @@ def main():
                     log('new config:', json.dumps(cfg, ensure_ascii=False))
             except OSError:
                 pass
+            if cfg['reset_stat'] > reset_stat_znany:          # "new fermentation" on the page
+                reset_stat_znany = cfg['reset_stat']
+                archiwizuj_historie(t)
+                for i in range(N):
+                    lacznie[i] = 0
+                    od[i] = t
+                    det[i].reset()
+                w_minucie = [0] * N
+                w_godzinie = [0] * N
+                minuta = int(t // 60) * 60
+                godzina = int(t // 3600) * 3600
+                ost_licz = 0.0                                # save the zeroed totals right away
+                log('statistics reset: new fermentation')
             for i, g in enumerate(cfg['gasiory']):
                 if g['reset'] > reset_znany[i]:
                     reset_znany[i] = g['reset']
@@ -442,12 +490,14 @@ def main():
                     'sygnal': list(d.sygnal),
                 })
             zapisz_json(STAN, {'wersja': VERSION, 't': t, 'start': start, 'fps': round(fps, 1),
-                               'przerwa_min': cfg['przerwa_min'], 'gasiory': gas})
+                               'przerwa_min': cfg['przerwa_min'], 'reset_stat': reset_stat_znany,
+                               'gasiory': gas})
 
         # totals to disk once a minute (spares SD/eMMC)
         if t - ost_licz >= 60:
             ost_licz = t
-            zapisz_json(LICZNIKI, {'lacznie': lacznie, 'od': od, 'reset': reset_znany})
+            zapisz_json(LICZNIKI, {'lacznie': lacznie, 'od': od, 'reset': reset_znany,
+                                   'reset_stat': reset_stat_znany})
 
 
 if __name__ == '__main__':

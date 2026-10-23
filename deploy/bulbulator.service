@@ -1,3 +1,7 @@
+# Bulbulator - https://github.com/myshak1/Bulbulator
+# Copyright (c) 2026 Kris SP2KMO
+# SPDX-License-Identifier: MIT
+#
 [Unit]
 Description=Bulbulator - fermentation airlock bubble counter
 After=network-online.target

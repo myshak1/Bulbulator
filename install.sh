@@ -1,4 +1,8 @@
 #!/bin/sh
+# Bulbulator - https://github.com/myshak1/Bulbulator
+# Copyright (c) 2026 Kris SP2KMO
+# SPDX-License-Identifier: MIT
+#
 # Bulbulator installer for Debian / Ubuntu / Raspberry Pi OS / Armbian.
 # Usage:  sudo ./install.sh
 set -e

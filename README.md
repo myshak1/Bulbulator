@@ -17,7 +17,9 @@
 - Live detection signal with the threshold line, for easy tuning
 - History chart (6 h / 24 h / 48 h / 7 days / all) and CSV download
 - Fermentation statistics: averages, busiest hour, trend (speeding up / slowing down)
+- Live camera image at the top of the page; the airlock frame flashes for every counted bubble
 - Mark the airlocks with the mouse directly on the camera image
+- **New fermentation** button: all counters and the history start from zero, the old data is archived as CSV
 - Polish and English interface (flags in the top-right corner)
 - Light on resources: ~15% of one core on a Raspberry Pi 4 / RK3399 board
 
@@ -97,6 +99,7 @@ The built-in server has **no login by default** — set `BULBULATOR_AUTH` or bin
 | `DATA/historia_min.csv` | `unix_time,count1,count2,…` per minute (last 48 h) |
 | `DATA/historia_godz.csv` | the same per hour (whole history) |
 | `DATA/liczniki.json` | total counters |
+| `DATA/historia_*-YYYYmmdd-HHMM.csv` | history archived by *New fermentation* |
 | `STATE/stan.json`, `STATE/snapshot.jpg` | live state and camera image for the page |
 
 File and JSON key names are Polish (*gąsior* = carboy, *bąbel* = bubble).
@@ -109,4 +112,4 @@ It runs on a small home server (a Radxa ROCK Pi 4B+ with a cheap USB camera), bu
 
 ## License
 
-[MIT](LICENSE)
+Copyright (c) 2026 Kris SP2KMO — released under the [MIT License](LICENSE).

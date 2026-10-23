@@ -17,7 +17,9 @@
 - Wykres sygnału wykrywania z linią progu, który ułatwia strojenie
 - Wykres historii (6 h / 24 h / 48 h / 7 dni / całość) i pobieranie CSV
 - Statystyki fermentacji: średnie, najaktywniejsza godzina, trend (przyspiesza / zwalnia)
+- Obraz z kamery na żywo na górze strony; ramka rurki miga przy każdym policzonym bąblu
 - Zaznaczanie rurek myszą bezpośrednio na obrazie z kamery
+- Przycisk **Nowa fermentacja**: liczniki i historia zaczynają się od zera, stare dane zostają w archiwum CSV
 - Interfejs po polsku i po angielsku (flagi w prawym górnym rogu)
 - Małe obciążenie: ok. 15% jednego rdzenia na Raspberry Pi 4 i płytkach z RK3399
 
@@ -99,6 +101,7 @@ Wbudowany serwer **domyślnie nie ma logowania**. Jeśli sieć nie jest zaufana,
 | `DATA/historia_min.csv` | `czas_unix,liczba1,liczba2,…` co minutę (ostatnie 48 h) |
 | `DATA/historia_godz.csv` | to samo co godzinę (cała historia) |
 | `DATA/liczniki.json` | liczniki łączne |
+| `DATA/historia_*-RRRRmmdd-GGMM.csv` | historia zarchiwizowana przyciskiem *Nowa fermentacja* |
 | `STATE/stan.json`, `STATE/snapshot.jpg` | stan na żywo i obraz z kamery dla strony |
 
 ## O projekcie
@@ -109,4 +112,4 @@ Działa na małym domowym serwerze (Radxa ROCK Pi 4B+ z tanią kamerą USB), ale
 
 ## Licencja
 
-[MIT](LICENSE)
+Copyright (c) 2026 Kris SP2KMO — udostępnione na [licencji MIT](LICENSE).
