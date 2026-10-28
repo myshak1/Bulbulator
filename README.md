@@ -12,9 +12,9 @@
 
 ## Features
 
-- Counts bubbles in **1–4 airlocks** at once, each with its own sensitivity
+- Counts bubbles in **1–4 airlocks** at once, each with its own **fixed threshold** that only you change
 - Live view per airlock: bubbles/s, /min, /hour, instant rate, last bubble, total
-- Live detection signal with the threshold line, for easy tuning
+- Live detection signal with the threshold line — click or drag on it to set the threshold
 - History chart (6 h / 24 h / 48 h / 7 days / all) and CSV download
 - Fermentation statistics: averages, busiest hour, trend (speeding up / slowing down)
 - Live camera image at the top of the page; the airlock frame flashes for every counted bubble
@@ -25,7 +25,7 @@
 
 ## How it works
 
-The camera image is analysed ~15 times per second at half resolution. Inside each marked rectangle the program measures the change between consecutive frames, subtracts the change of the whole picture (light flicker, camera noise) and looks for short peaks. The threshold adapts by itself to the background noise of each airlock (median + MAD), and the *sensitivity* slider sets how far above the noise a peak has to be.
+The camera image is analysed ~15 times per second at half resolution. Inside each marked rectangle the program measures the change between consecutive frames, subtracts the change of the whole picture (light flicker, camera noise) and looks for short peaks. A bubble is counted when this signal crosses the airlock's threshold upwards (and the *minimum time between bubbles* has passed). The threshold is fixed: the program never adjusts it. Only once, when an airlock has no threshold yet, it measures ~10 s of noise and saves a starting value, which you then tune on the page.
 
 ## Requirements
 
@@ -87,7 +87,7 @@ The built-in server has **no login by default** — set `BULBULATOR_AUTH` or bin
 
 - Keep the camera and jars **still**, use **steady light** (an LED lamp, no sunlight moving across the tubes).
 - A **dark background** behind the airlock and the rectangle covering **only the airlock with water** give the clearest peaks.
-- Watch the small chart under each counter: every bubble should be a peak above the dashed line. Bubbles missed → lower that airlock's sensitivity. Counting too many → raise it.
+- Watch the small chart under each counter: every bubble should be a peak above the dashed line and the noise should stay below it. Bubbles missed → lower that airlock's threshold. Counting too many → raise it.
 - Count by hand for one minute and compare with *Bubbles/min*.
 - Three-piece airlocks (with a floating cap) are the easiest to detect.
 
@@ -95,7 +95,7 @@ The built-in server has **no login by default** — set `BULBULATOR_AUTH` or bin
 
 | Path | Content |
 |---|---|
-| `DATA/config.json` | airlock areas, names, sensitivity (written by the page) |
+| `DATA/config.json` | airlock areas, names, thresholds (written by the page) |
 | `DATA/historia_min.csv` | `unix_time,count1,count2,…` per minute (last 48 h) |
 | `DATA/historia_godz.csv` | the same per hour (whole history) |
 | `DATA/liczniki.json` | total counters |

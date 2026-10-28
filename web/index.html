@@ -75,9 +75,11 @@ section.sek{margin-top:14px}
 .bk-sia{display:grid;grid-template-columns:repeat(3,1fr);gap:6px 12px;font-size:13px}
 .bk-sia div{display:flex;flex-direction:column;min-width:0}.bk-sia span{color:var(--mut);font-size:12px}
 .bk-sia strong{font-variant-numeric:tabular-nums;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.bk-syg{width:100%;height:56px;display:block;margin:10px 0 6px;background:#0b1220;border-radius:6px}
+.bk-syg{width:100%;height:80px;display:block;margin:10px 0 2px;background:#0b1220;border-radius:6px;cursor:ns-resize;touch-action:none}
+.bk-sygpod{font-size:11px;color:var(--mut);margin:0 0 8px;display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}
 .bk-dol{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-.bk-cz{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--mut);flex:1;min-width:180px}.bk-cz input{flex:1;min-width:60px}.bk-cz b{color:var(--txt);min-width:26px}
+.bk-cz{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--mut);flex:1;min-width:200px}.bk-cz input{flex:1;min-width:60px}.bk-cz b{color:var(--txt);min-width:34px;text-align:right;font-variant-numeric:tabular-nums}
+.bk-cz button{width:26px;padding:3px 0}
 
 /* history + statistics */
 .bk-wyk{position:relative}
@@ -187,12 +189,13 @@ const TXT = {
     areasSmall: 'Za mały prostokąt, spróbuj ponownie.', imgAlt: 'Obraz z kamery z zaznaczonymi rurkami',
     settings: 'Ustawienia', minGap: 'Min. odstęp między bąblami:',
     save: 'Zapisz', saved: 'Zapisano ✓', saveFail: 'Nie udało się zapisać ustawień ({e}).',
-    tips: 'Wskazówki: kamera i gąsiory nieruchomo, stałe światło (lampka LED), ciemne tło za rurką i prostokąt obejmujący tylko rurkę z wodą. Ramka na obrazie mignie przy każdym policzonym bąblu. Wykres na karcie pokazuje sygnał (linia) i próg (przerywana): każdy bąbel powinien być szczytem ponad progiem. Jeśli bąble giną, zmniejsz czułość tego gąsiora; jeśli liczy za dużo, zwiększ.',
+    tips: 'Wskazówki: kamera i gąsiory nieruchomo, stałe światło (lampka LED), ciemne tło za rurką i prostokąt obejmujący tylko rurkę z wodą. Ramka na obrazie mignie przy każdym policzonym bąblu. Wykres na karcie pokazuje sygnał (linia) i próg (przerywana). Próg jest stały, program nigdy go sam nie zmienia. Bąbel liczy się, gdy sygnał przetnie linię progu w górę. Ustaw próg nad szumem, a pod szczytami bąbli: kliknij albo przeciągnij na wykresie, użyj suwaka lub przycisków −/+. Bąble giną: obniż próg. Liczy za dużo: podnieś.',
     license: 'licencja MIT',
     jar: 'Gąsior {n}', bps: 'bąbli/s', avg10: '(średnio z 10 s)', perMin: 'Bąbli/min', perHour: 'Bąbli/godz.',
     instant: 'Chwilowo', last: 'Ostatni bąbel', total: 'Łącznie', since: 'Liczone od',
     mark: 'Zaznacz rurkę', markCancel: 'Anuluj', reset: 'Zeruj', resetT: 'Zeruj licznik tego gąsiora', resetQ: 'Wyzerować licznik łączny: {name}?',
-    sens: 'Czułość', sensT: 'mniej = łapie słabsze bąble', stCounting: '● liczy', stMark: 'zaznacz rurkę', stNoData: 'brak danych',
+    sens: 'Próg', sensT: 'Stały próg wykrywania. Niżej = łapie słabsze bąble. Możesz też kliknąć na wykresie.', sigHint: 'kliknij lub przeciągnij, żeby ustawić próg',
+    sigPeak: 'szczyt 10 s: {p} · szum: {n}', measuring: 'mierzę szum (10 s)…', stCounting: '● liczy', stMark: 'zaznacz rurkę', stNoData: 'brak danych',
     nameAria: 'Nazwa gąsiora', sigAria: 'Sygnał wykrywania na żywo', chartAria: 'Wykres liczby bąbli na minutę w czasie',
     sAgo: '{n} s temu', minAgo: '{n} min temu', empty: 'Brak danych w tym zakresie — historia zapisuje się co minutę.',
     none: 'brak danych', rowNow: 'Teraz (ostatnia minuta)', rowHour: 'Średnio, ostatnia godzina', rowDay: 'Średnio, ostatnie 24 h',
@@ -212,12 +215,13 @@ const TXT = {
     areasSmall: 'Rectangle too small, try again.', imgAlt: 'Camera image with the marked airlocks',
     settings: 'Settings', minGap: 'Min. time between bubbles:',
     save: 'Save', saved: 'Saved ✓', saveFail: 'Could not save the settings ({e}).',
-    tips: 'Tips: keep the camera and jars still, use steady light (an LED lamp), a dark background behind the airlock and a rectangle that covers only the airlock with water. The frame on the image flashes for every counted bubble. The chart on each card shows the signal (line) and the threshold (dashed): every bubble should be a peak above the threshold. If bubbles are missed, lower that jar’s sensitivity; if it counts too many, raise it.',
+    tips: 'Tips: keep the camera and jars still, use steady light (an LED lamp), a dark background behind the airlock and a rectangle that covers only the airlock with water. The frame on the image flashes for every counted bubble. The chart on each card shows the signal (line) and the threshold (dashed). The threshold is fixed, the program never changes it by itself. A bubble is counted when the signal crosses the threshold upwards. Put the threshold above the noise and below the bubble peaks: click or drag on the chart, use the slider or the −/+ buttons. Bubbles missed: lower it. Counting too many: raise it.',
     license: 'MIT License',
     jar: 'Jar {n}', bps: 'bubbles/s', avg10: '(10 s average)', perMin: 'Bubbles/min', perHour: 'Bubbles/hour',
     instant: 'Instant', last: 'Last bubble', total: 'Total', since: 'Counting since',
     mark: 'Mark airlock', markCancel: 'Cancel', reset: 'Reset', resetT: 'Reset this jar’s counter', resetQ: 'Reset the total counter: {name}?',
-    sens: 'Sensitivity', sensT: 'lower = catches weaker bubbles', stCounting: '● counting', stMark: 'mark the airlock', stNoData: 'no data',
+    sens: 'Threshold', sensT: 'Fixed detection threshold. Lower = catches weaker bubbles. You can also click on the chart.', sigHint: 'click or drag to set the threshold',
+    sigPeak: '10 s peak: {p} · noise: {n}', measuring: 'measuring the noise (10 s)…', stCounting: '● counting', stMark: 'mark the airlock', stNoData: 'no data',
     nameAria: 'Jar name', sigAria: 'Live detection signal', chartAria: 'Chart of bubbles per minute over time',
     sAgo: '{n} s ago', minAgo: '{n} min ago', empty: 'No data in this range yet — history is saved every minute.',
     none: 'no data', rowNow: 'Now (last minute)', rowHour: 'Average, last hour', rowDay: 'Average, last 24 h',
@@ -301,7 +305,6 @@ g('bkNowa').onclick = async () => {
 /* ---------- live cards ---------- */
 function budujKarty() {
   g('bkKarty').innerHTML = cfg.gasiory.map((gs, i) => {
-    const cz = gs.czulosc ?? cfg.czulosc ?? 4;
     return `
   <div class="bk-karta" id="bkK${i}" style="--k:${KOLORY[i]}">
     <div class="bk-nag"><span class="bk-kol"></span>
@@ -316,23 +319,59 @@ function budujKarty() {
       <div><span>${t('total')}</span><strong id="bkLa${i}">–</strong></div>
       <div><span>${t('since')}</span><strong id="bkOd${i}">–</strong></div>
     </div>
-    <canvas class="bk-syg" id="bkSyg${i}" aria-label="${esc(t('sigAria'))}"></canvas>
+    <canvas class="bk-syg" id="bkSyg${i}" aria-label="${esc(t('sigAria'))}" title="${esc(t('sigHint'))}"></canvas>
+    <div class="bk-sygpod"><span id="bkSzc${i}"></span><span>${t('sigHint')}</span></div>
     <div class="bk-dol">
-      <label class="bk-cz" title="${esc(t('sensT'))}">${t('sens')} <b id="bkCzV${i}">${cz}</b><input type="range" id="bkCz${i}" min="0.5" max="12" step="0.5" value="${cz}"></label>
+      <div class="bk-cz" title="${esc(t('sensT'))}">${t('sens')} <b id="bkCzV${i}">–</b>
+        <button class="b mini" id="bkCzM${i}" aria-label="−">−</button><input type="range" id="bkCz${i}" min="0" max="1000" step="1" aria-label="${esc(t('sens'))}"><button class="b mini" id="bkCzP${i}" aria-label="+">+</button></div>
       <button class="b mini" id="bkZ${i}">${t('mark')}</button>
       <button class="b mini obrys del" id="bkR${i}" title="${esc(t('resetT'))}">${t('reset')}</button>
     </div>
   </div>`; }).join('');
   cfg.gasiory.forEach((gs, i) => {
     g('bkN' + i).onchange = async e => { cfg.gasiory[i].nazwa = e.target.value.trim() || `Gąsior ${i + 1}`; await zapiszCfg(); rysujRamki(); rysujLegende(); rysujTabele(); };
-    g('bkCz' + i).oninput = e => g('bkCzV' + i).textContent = e.target.value;
-    g('bkCz' + i).onchange = async e => { cfg.gasiory[i].czulosc = +e.target.value; await zapiszCfg(); };
+    g('bkCz' + i).oninput = e => ustawProg(i, zSuwaka(+e.target.value), false);
+    g('bkCz' + i).onchange = () => zapiszProg(i, 0);
+    g('bkCzM' + i).onclick = () => { ustawProg(i, (progGas(i) || 1) / 1.1); zapiszProg(i, 700); };
+    g('bkCzP' + i).onclick = () => { ustawProg(i, (progGas(i) || 1) * 1.1); zapiszProg(i, 700); };
+    przypnijWykresProgu(i);
+    pokazProg(i);
     g('bkZ' + i).onclick = () => ustawTryb(zaznaczam === i ? -1 : i);
     g('bkR' + i).onclick = async () => {
       if (!confirm(t('resetQ', {name: nazwa(i)}))) return;
       cfg.gasiory[i].reset = Date.now() / 1000; await zapiszCfg();
     };
   });
+}
+/* ---------- fixed threshold: set only by you, never changed by the program ---------- */
+const PMIN = 0.05, PMAX = 50, LOGR = Math.log(PMAX / PMIN);
+const zSuwaka = v => PMIN * Math.exp(v / 1000 * LOGR);
+const doSuwaka = p => Math.round(Math.log(p / PMIN) / LOGR * 1000);
+const progGas = i => { const p = (cfg.gasiory[i] || {}).prog; return typeof p === 'number' ? p : null; };
+const zapisProgu = [], skalaProgu = [];
+function pokazProg(i) {
+  const p = progGas(i);
+  g('bkCzV' + i).textContent = p == null ? '–' : liczba(p, 2);
+  if (p != null && document.activeElement !== g('bkCz' + i)) g('bkCz' + i).value = doSuwaka(p);
+}
+function ustawProg(i, p, odswiezSuwak = true) {
+  cfg.gasiory[i].prog = Math.round(Math.min(PMAX, Math.max(PMIN, p)) * 100) / 100;
+  g('bkCzV' + i).textContent = liczba(cfg.gasiory[i].prog, 2);
+  if (odswiezSuwak) g('bkCz' + i).value = doSuwaka(cfg.gasiory[i].prog);
+  const s = stan && stan.gasiory && stan.gasiory[i];
+  rysujSygnal(i, s ? s.sygnal : []);
+}
+function zapiszProg(i, zwloka) {
+  clearTimeout(zapisProgu[i]);
+  zapisProgu[i] = setTimeout(async () => { if (await zapiszCfg()) { g('bkCzV' + i).style.color = 'var(--ok)'; setTimeout(() => g('bkCzV' + i).style.color = '', 800); } }, zwloka);
+}
+function przypnijWykresProgu(i) {   // click or drag on the signal chart = set the threshold at that height
+  const cv = g('bkSyg' + i);
+  const zY = e => { const r = cv.getBoundingClientRect(), m = skalaProgu[i] || 1; return (r.height - 4 - (e.clientY - r.top)) / (r.height - 8) * m; };
+  cv.addEventListener('pointerdown', e => { if (!skalaProgu[i]) return; cv.setPointerCapture(e.pointerId); cv.dataset.ciagne = '1'; ustawProg(i, zY(e)); e.preventDefault(); });
+  cv.addEventListener('pointermove', e => { if (cv.dataset.ciagne) ustawProg(i, zY(e)); });
+  const koniec = () => { if (!cv.dataset.ciagne) return; delete cv.dataset.ciagne; zapiszProg(i, 0); };
+  cv.addEventListener('pointerup', koniec); cv.addEventListener('pointercancel', koniec);
 }
 function ustawTryb(i, komunikat) {
   zaznaczam = i;
@@ -371,7 +410,8 @@ async function odswiezStan() {
     g('bkOst' + i).textContent = s ? kiedy(s.ostatni) : '–';
     g('bkLa' + i).textContent = s ? liczba(s.lacznie, 0) : '–';
     g('bkOd' + i).textContent = s ? dataGodz(s.od) : '–';
-    rysujSygnal(g('bkSyg' + i), s ? s.sygnal : [], KOLORY[i]);
+    if (s && progGas(i) == null && typeof s.prog === 'number') { cfg.gasiory[i].prog = s.prog; pokazProg(i); }
+    rysujSygnal(i, s ? s.sygnal : []);
     if (s && s.ostatni && ostatnie[i] && s.ostatni !== ostatnie[i]) {   // a new bubble since the last poll
       mignij(g('bkK' + i)); mignij(g('bkObraz').querySelector(`.bk-ramka[data-i="${i}"]:not(.tymcz)`));
     }
@@ -386,16 +426,25 @@ function przygotuj(cv) {
   const c = cv.getContext('2d'); c.setTransform(dpr, 0, 0, dpr, 0, 0); c.clearRect(0, 0, w, h);
   return [c, w, h];
 }
-function rysujSygnal(cv, dane, kolor) {
-  const [c, w, h] = przygotuj(cv);
-  if (!dane || dane.length < 2) return;
-  const t1 = dane[dane.length - 1][0], t0 = t1 - 10;
-  const max = Math.max(1, ...dane.map(d => Math.max(d[1], d[2]))) * 1.15;
-  const X = x => (x - t0) / 10 * w, Y = v => h - 4 - v / max * (h - 8);
-  c.setLineDash([4, 4]); c.strokeStyle = '#94a3b8'; c.lineWidth = 1; c.beginPath();
-  dane.forEach((d, k) => k ? c.lineTo(X(d[0]), Y(d[2])) : c.moveTo(X(d[0]), Y(d[2]))); c.stroke();
-  c.setLineDash([]); c.strokeStyle = kolor; c.lineWidth = 2; c.lineJoin = 'round'; c.beginPath();
+function rysujSygnal(i, dane) {
+  // Fixed scale: the top of the chart is 2.5 x the threshold, so the threshold line always sits
+  // at the same height and only moves when you change it. Higher peaks are cut at the top.
+  const cv = g('bkSyg' + i), kolor = KOLORY[i], [c, w, h] = przygotuj(cv), prog = progGas(i);
+  const szc = g('bkSzc' + i);
+  if (!dane || dane.length < 2) { if (szc) szc.textContent = ''; return; }
+  const sv = dane.map(d => d[1]), posort = [...sv].sort((a, b) => a - b);
+  const szczyt = posort[posort.length - 1], szum = posort[Math.floor(posort.length / 2)];
+  if (szc) szc.textContent = prog == null ? t('measuring') : t('sigPeak', {p: liczba(szczyt, 2), n: liczba(szum, 2)});
+  if (!cv.dataset.ciagne) skalaProgu[i] = prog == null ? Math.max(1, szczyt * 1.15) : prog * 2.5;
+  const max = skalaProgu[i], t1 = dane[dane.length - 1][0], t0 = t1 - 10;
+  const X = x => (x - t0) / 10 * w, Y = v => h - 4 - Math.min(v, max) / max * (h - 8);
+  c.strokeStyle = kolor; c.lineWidth = 2; c.lineJoin = 'round'; c.beginPath();
   dane.forEach((d, k) => k ? c.lineTo(X(d[0]), Y(d[1])) : c.moveTo(X(d[0]), Y(d[1]))); c.stroke();
+  if (prog == null) return;
+  const yp = Math.round(Y(prog)) + .5;
+  c.setLineDash([5, 4]); c.strokeStyle = '#e2e8f0'; c.lineWidth = 1; c.beginPath(); c.moveTo(0, yp); c.lineTo(w, yp); c.stroke(); c.setLineDash([]);
+  c.font = '11px system-ui,sans-serif'; c.textAlign = 'right'; c.textBaseline = 'bottom'; c.fillStyle = '#e2e8f0';
+  c.fillText(`${t('sens')} ${liczba(prog, 2)}`, w - 4, yp - 2);
 }
 
 /* ---------- camera image and the airlock areas ---------- */

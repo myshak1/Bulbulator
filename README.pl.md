@@ -12,9 +12,9 @@
 
 ## Możliwości
 
-- Liczenie bąbli w **1–4 rurkach** naraz, każda z własną czułością
+- Liczenie bąbli w **1–4 rurkach** naraz, każda z własnym **stałym progiem**, który zmieniasz tylko Ty
 - Na żywo dla każdej rurki: bąbli/s, /min, /godz., tempo chwilowe, ostatni bąbel, suma
-- Wykres sygnału wykrywania z linią progu, który ułatwia strojenie
+- Wykres sygnału wykrywania z linią progu: kliknij albo przeciągnij na nim, żeby ustawić próg
 - Wykres historii (6 h / 24 h / 48 h / 7 dni / całość) i pobieranie CSV
 - Statystyki fermentacji: średnie, najaktywniejsza godzina, trend (przyspiesza / zwalnia)
 - Obraz z kamery na żywo na górze strony; ramka rurki miga przy każdym policzonym bąblu
@@ -25,7 +25,7 @@
 
 ## Jak to działa
 
-Obraz z kamery jest analizowany ok. 15 razy na sekundę w połowie rozdzielczości. W każdym zaznaczonym prostokącie program mierzy zmianę między kolejnymi klatkami i odejmuje od niej zmianę całego obrazu (migotanie światła, szum kamery). Bąbel to krótki szczyt tej zmiany. Próg sam dopasowuje się do szumu tła każdej rurki (mediana + MAD). Suwak *czułości* ustawia, o ile szczyt musi wystawać ponad ten szum.
+Obraz z kamery jest analizowany ok. 15 razy na sekundę w połowie rozdzielczości. W każdym zaznaczonym prostokącie program mierzy zmianę między kolejnymi klatkami i odejmuje od niej zmianę całego obrazu (migotanie światła, szum kamery). Bąbel liczy się, gdy ten sygnał przetnie próg rurki w górę (i minie *minimalny odstęp między bąblami*). Próg jest stały: program nigdy go sam nie zmienia. Tylko raz, gdy rurka nie ma jeszcze progu, program mierzy szum przez ok. 10 s i zapisuje wartość startową, którą potem ustawiasz na stronie.
 
 ## Wymagania
 
@@ -88,8 +88,8 @@ Wbudowany serwer **domyślnie nie ma logowania**. Jeśli sieć nie jest zaufana,
 - Kamera i gąsiory **nieruchomo**, **stałe światło** (lampka LED, bez słońca przesuwającego się po rurkach).
 - **Ciemne tło** za rurką i prostokąt obejmujący **tylko rurkę z wodą** dają najwyraźniejsze szczyty.
 - Patrz na mały wykres pod licznikiem: każdy bąbel powinien być szczytem ponad przerywaną linią.
-  - Bąble giną: zmniejsz czułość tej rurki.
-  - Liczy za dużo: zwiększ czułość.
+  - Bąble giną: obniż próg tej rurki.
+  - Liczy za dużo: podnieś próg.
 - Policz bąble ręcznie przez minutę i porównaj z polem *Bąbli/min*.
 - Najłatwiej wykryć rurki trzyczęściowe (z pływającym kapturkiem).
 
@@ -97,7 +97,7 @@ Wbudowany serwer **domyślnie nie ma logowania**. Jeśli sieć nie jest zaufana,
 
 | Ścieżka | Zawartość |
 |---|---|
-| `DATA/config.json` | obszary rurek, nazwy, czułość (zapisuje je strona) |
+| `DATA/config.json` | obszary rurek, nazwy, progi (zapisuje je strona) |
 | `DATA/historia_min.csv` | `czas_unix,liczba1,liczba2,…` co minutę (ostatnie 48 h) |
 | `DATA/historia_godz.csv` | to samo co godzinę (cała historia) |
 | `DATA/liczniki.json` | liczniki łączne |

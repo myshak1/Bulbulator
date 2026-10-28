@@ -21,6 +21,12 @@ Files:
   DATA/historia_godz.csv   bubbles per hour    (whole history)
   DATA/liczniki.json       total counters (survive restarts)
 
+Bubble threshold: each airlock has a FIXED threshold ('prog') set on the page;
+the program never changes it.  A bubble is counted when the signal rises above
+the threshold (and at least przerwa_min seconds passed since the previous one).
+Only when an airlock has no threshold yet (new install, upgrade from 1.2) the
+program measures its noise for ~10 s once, saves a starting value and keeps it.
+
 "New fermentation" on the page sets reset_stat in config.json: the counters of
 all airlocks go to zero and the history files are moved aside as
 historia_min-YYYYmmdd-HHMM.csv / historia_godz-YYYYmmdd-HHMM.csv.
@@ -42,7 +48,7 @@ import urllib.request
 import cv2
 import numpy as np
 
-VERSION = '1.2'
+VERSION = '1.3'
 HERE = os.path.dirname(os.path.abspath(__file__))
 
 STREAM = os.environ.get('BULBULATOR_STREAM', 'http://127.0.0.1:8090/stream')
@@ -63,12 +69,15 @@ SNAPSHOT = os.path.join(STATE, 'snapshot.jpg')
 SKALA = 2          # frames are analysed at half resolution (much faster)
 
 DOMYSLNA = {
-    'gasiory': [{'nazwa': f'Gąsior {i + 1}', 'roi': None, 'reset': 0, 'czulosc': 4.0} for i in range(N)],
-    'czulosc': 4.0,       # default sensitivity: how many "noise widths" a peak must have
+    'gasiory': [{'nazwa': f'Gąsior {i + 1}', 'roi': None, 'reset': 0, 'prog': None} for i in range(N)],
+    'czulosc': 4.0,       # only for the one-time starting threshold (noise widths above the background)
     'przerwa_min': 0.35,  # minimum time between two bubbles in one airlock [s]
     'obrot': False,       # page only: show the camera image rotated by 180 degrees
     'reset_stat': 0,      # time of the last "new fermentation" (all counters and history)
 }
+
+
+PROG_MIN, PROG_MAX = 0.05, 50.0   # allowed fixed threshold range (signal units)
 
 
 def log(*a):
@@ -113,16 +122,18 @@ def normalizuj_cfg(c):
             d['roi'] = [int(v) for v in roi]
         d['reset'] = liczba_lub(g.get('reset'), 0.0)
         d['czulosc'] = min(max(liczba_lub(g.get('czulosc'), cfg['czulosc']), 0.5), 20.0)
+        p = liczba_lub(g.get('prog'), None)
+        d['prog'] = None if p is None else round(min(max(p, PROG_MIN), PROG_MAX), 2)
     return cfg
 
 
 class Detektor:
-    """Detects a bubble as a short peak of frame-to-frame change inside the airlock area."""
+    """Counts a bubble when the airlock signal rises above a fixed threshold."""
 
     def __init__(self):
         self.prev = None
-        self.historia = collections.deque(maxlen=150)  # ~10 s of signal for the background level
-        self.w_babelku = False
+        self.pomiar = collections.deque(maxlen=150)    # only for the one-time starting threshold
+        self.ponizej = True                            # signal was below the threshold
         self.ostatni = 0.0
         self.zdarzenia = collections.deque()           # bubble times (last hour)
         self.sygnal = collections.deque(maxlen=150)    # for the live chart
@@ -131,28 +142,35 @@ class Detektor:
         self.zdarzenia.clear()
         self.ostatni = 0.0
 
-    def krok(self, wycinek, glob, t, czulosc, przerwa):
+    def startowy_prog(self, czulosc):
+        """Starting threshold from ~10 s of noise (median + czulosc x MAD), used once."""
+        h = np.fromiter(self.pomiar, float)
+        tlo = float(np.median(h))
+        odch = float(np.median(np.abs(h - tlo))) * 1.4826
+        return round(min(max(tlo + czulosc * max(odch, 0.15) + 0.1, PROG_MIN), PROG_MAX), 2)
+
+    def krok(self, wycinek, glob, t, prog, przerwa):
+        """One frame. prog=None: no threshold yet, only measure the noise."""
         if self.prev is None or self.prev.shape != wycinek.shape:
             self.prev = wycinek
             return False
         d = float(cv2.absdiff(wycinek, self.prev).mean())
         self.prev = wycinek
         s = max(0.0, d - glob)                             # minus whole-frame change (light, noise)
-        self.historia.append(s)
-        h = np.fromiter(self.historia, float)
-        tlo = float(np.median(h))                          # typical level without a bubble
-        odch = float(np.median(np.abs(h - tlo))) * 1.4826  # typical noise (robust to bubbles)
-        prog = tlo + czulosc * max(odch, 0.15) + 0.1
         babel = False
-        if len(self.historia) >= 15:
-            if not self.w_babelku and s > prog and t - self.ostatni >= przerwa:
-                self.w_babelku = True
-                self.ostatni = t
-                self.zdarzenia.append(t)
-                babel = True
-            elif self.w_babelku and s < (tlo + prog) / 2:
-                self.w_babelku = False
-        self.sygnal.append([round(t, 2), round(s, 2), round(prog, 2)])
+        if prog is None:
+            self.pomiar.append(s)
+        else:
+            self.pomiar.clear()
+            if s > prog:
+                if self.ponizej and t - self.ostatni >= przerwa:
+                    self.ostatni = t
+                    self.zdarzenia.append(t)
+                    babel = True
+                self.ponizej = False
+            else:
+                self.ponizej = True
+        self.sygnal.append([round(t, 2), round(s, 2), prog if prog is not None else 0])
         while self.zdarzenia and t - self.zdarzenia[0] > 3600:
             self.zdarzenia.popleft()
         return babel
@@ -259,6 +277,22 @@ def archiwizuj_historie(t):
                 log('history archived:', cel)
             except OSError as e:
                 log('history archive:', e)
+
+
+def zapisz_prog(i, prog):
+    """Store the one-time starting threshold in config.json, keeping everything else as it is."""
+    c = wczytaj_json(CONFIG, {})
+    if not isinstance(c, dict):
+        c = {}
+    gas = c.get('gasiory') if isinstance(c.get('gasiory'), list) else []
+    while len(gas) <= i:
+        gas.append({})
+    if not isinstance(gas[i], dict):
+        gas[i] = {}
+    if liczba_lub(gas[i].get('prog'), None) is None:   # never overwrite a value set on the page
+        gas[i]['prog'] = prog
+        c['gasiory'] = gas
+        zapisz_json(CONFIG, c)
 
 
 # ---------------------------------------------------------------- web server (optional)
@@ -447,10 +481,14 @@ def main():
             w, h = min(w, ww - x), min(h, hh - y)
             if w < 2 or h < 2:
                 continue
-            if det[i].krok(img[y:y + h, x:x + w], glob, t, g['czulosc'], cfg['przerwa_min']):
+            if det[i].krok(img[y:y + h, x:x + w], glob, t, g['prog'], cfg['przerwa_min']):
                 lacznie[i] += 1
                 w_minucie[i] += 1
                 w_godzinie[i] += 1
+            if g['prog'] is None and len(det[i].pomiar) >= det[i].pomiar.maxlen:
+                g['prog'] = det[i].startowy_prog(g['czulosc'])
+                zapisz_prog(i, g['prog'])
+                log(f'airlock {i + 1}: starting threshold {g["prog"]} (fixed, change it on the page)')
 
         klatek += 1
         if t - fps_t >= 5:
@@ -477,7 +515,7 @@ def main():
                 zd = list(d.zdarzenia)[-2:]
                 gas.append({
                     'nazwa': g['nazwa'],
-                    'czulosc': g['czulosc'],
+                    'prog': g['prog'],
                     'aktywny': bool(g['roi']),
                     'bps': round(d.ile(t, 10) / 10, 2),
                     'bpm': d.ile(t, 60),
