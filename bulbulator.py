@@ -27,6 +27,11 @@ the threshold (and at least przerwa_min seconds passed since the previous one).
 Only when an airlock has no threshold yet (new install, upgrade from 1.2) the
 program measures its noise for ~10 s once, saves a starting value and keeps it.
 
+Pause and switching airlocks off (both set on the page): while counting is
+paused ('pauza') or an airlock is switched off ('wylaczony'), nothing is counted
+and the history gets an empty value instead of 0, so the charts and averages
+are not pulled down by the time the camera could not see anything.
+
 "New fermentation" on the page sets reset_stat in config.json: the counters of
 all airlocks go to zero and the history files are moved aside as
 historia_min-YYYYmmdd-HHMM.csv / historia_godz-YYYYmmdd-HHMM.csv.
@@ -48,7 +53,7 @@ import urllib.request
 import cv2
 import numpy as np
 
-VERSION = '1.3'
+VERSION = '1.4'
 HERE = os.path.dirname(os.path.abspath(__file__))
 
 STREAM = os.environ.get('BULBULATOR_STREAM', 'http://127.0.0.1:8090/stream')
@@ -69,11 +74,13 @@ SNAPSHOT = os.path.join(STATE, 'snapshot.jpg')
 SKALA = 2          # frames are analysed at half resolution (much faster)
 
 DOMYSLNA = {
-    'gasiory': [{'nazwa': f'Gąsior {i + 1}', 'roi': None, 'reset': 0, 'prog': None} for i in range(N)],
+    'gasiory': [{'nazwa': f'Gąsior {i + 1}', 'roi': None, 'reset': 0, 'prog': None, 'wylaczony': False}
+                for i in range(N)],
     'czulosc': 4.0,       # only for the one-time starting threshold (noise widths above the background)
     'przerwa_min': 0.35,  # minimum time between two bubbles in one airlock [s]
     'obrot': False,       # page only: show the camera image rotated by 180 degrees
     'reset_stat': 0,      # time of the last "new fermentation" (all counters and history)
+    'pauza': False,       # counting paused for all airlocks (e.g. at night)
 }
 
 
@@ -112,6 +119,7 @@ def normalizuj_cfg(c):
     cfg['przerwa_min'] = min(max(liczba_lub(c.get('przerwa_min'), 0.35), 0.05), 5.0)
     cfg['obrot'] = bool(c.get('obrot', False))
     cfg['reset_stat'] = liczba_lub(c.get('reset_stat'), 0.0)
+    cfg['pauza'] = c.get('pauza') is True
     zrodlo = c.get('gasiory') if isinstance(c.get('gasiory'), list) else []
     for i in range(N):
         g = zrodlo[i] if i < len(zrodlo) and isinstance(zrodlo[i], dict) else {}
@@ -121,6 +129,7 @@ def normalizuj_cfg(c):
         if isinstance(roi, list) and len(roi) == 4 and all(isinstance(v, (int, float)) for v in roi):
             d['roi'] = [int(v) for v in roi]
         d['reset'] = liczba_lub(g.get('reset'), 0.0)
+        d['wylaczony'] = g.get('wylaczony') is True
         d['czulosc'] = min(max(liczba_lub(g.get('czulosc'), cfg['czulosc']), 0.5), 20.0)
         p = liczba_lub(g.get('prog'), None)
         d['prog'] = None if p is None else round(min(max(p, PROG_MIN), PROG_MAX), 2)
@@ -403,6 +412,9 @@ def main():
     godzina = int(teraz // 3600) * 3600
     w_minucie = [0] * N
     w_godzinie = [0] * N
+    liczyl_min = [False] * N       # was the airlock counting at any time in this minute / hour
+    liczyl_godz = [False] * N
+    liczy_poprz = None
     prev_full = None
     ost_analiza = ost_stan = ost_cfg = ost_licz = ost_foto = 0.0
     klatek = 0
@@ -435,6 +447,8 @@ def main():
                     det[i].reset()
                 w_minucie = [0] * N
                 w_godzinie = [0] * N
+                liczyl_min = [False] * N
+                liczyl_godz = [False] * N
                 minuta = int(t // 60) * 60
                 godzina = int(t // 3600) * 3600
                 ost_licz = 0.0                                # save the zeroed totals right away
@@ -472,10 +486,20 @@ def main():
         prev_full = img
         hh, ww = img.shape[:2]
 
+        liczy = [bool(g['roi']) and not g['wylaczony'] and not cfg['pauza'] for g in cfg['gasiory']]
+        if liczy != liczy_poprz:
+            if liczy_poprz is not None:
+                log('counting:', 'PAUSED' if cfg['pauza'] else
+                    ', '.join(f'airlock {i + 1} ' + ('on' if v else 'off') for i, v in enumerate(liczy)))
+            liczy_poprz = liczy
         for i, g in enumerate(cfg['gasiory']):
-            roi = g['roi']
-            if not roi:
+            if not liczy[i]:
+                det[i].prev = None          # start fresh when counting resumes
+                det[i].ponizej = True
+                det[i].sygnal.clear()
                 continue
+            liczyl_min[i] = liczyl_godz[i] = True
+            roi = g['roi']
             x, y, w, h = (int(v / SKALA) for v in roi)
             x, y = max(0, min(x, ww - 1)), max(0, min(y, hh - 1))
             w, h = min(w, ww - x), min(h, hh - y)
@@ -496,13 +520,18 @@ def main():
             klatek, fps_t = 0, t
 
         # history: every minute and every hour
+        # (empty value = paused or switched off; a line where nothing counted is not written)
         if t >= minuta + 60:
-            dopisz(HIST_MIN, ','.join([str(minuta)] + [str(v) for v in w_minucie]))
+            if any(liczyl_min):
+                dopisz(HIST_MIN, ','.join([str(minuta)] + [str(v) if k else '' for v, k in zip(w_minucie, liczyl_min)]))
             w_minucie = [0] * N
+            liczyl_min = [False] * N
             minuta = int(t // 60) * 60
         if t >= godzina + 3600:
-            dopisz(HIST_GODZ, ','.join([str(godzina)] + [str(v) for v in w_godzinie]))
+            if any(liczyl_godz):
+                dopisz(HIST_GODZ, ','.join([str(godzina)] + [str(v) if k else '' for v, k in zip(w_godzinie, liczyl_godz)]))
             w_godzinie = [0] * N
+            liczyl_godz = [False] * N
             godzina = int(t // 3600) * 3600
             przytnij_minuty(t)
 
@@ -516,7 +545,9 @@ def main():
                 gas.append({
                     'nazwa': g['nazwa'],
                     'prog': g['prog'],
-                    'aktywny': bool(g['roi']),
+                    'aktywny': liczy[i],
+                    'zaznaczony': bool(g['roi']),
+                    'wylaczony': g['wylaczony'],
                     'bps': round(d.ile(t, 10) / 10, 2),
                     'bpm': d.ile(t, 60),
                     'bph': d.ile(t, 3600),
@@ -529,6 +560,7 @@ def main():
                 })
             zapisz_json(STAN, {'wersja': VERSION, 't': t, 'start': start, 'fps': round(fps, 1),
                                'przerwa_min': cfg['przerwa_min'], 'reset_stat': reset_stat_znany,
+                               'pauza': cfg['pauza'],
                                'gasiory': gas})
 
         # totals to disk once a minute (spares SD/eMMC)

@@ -49,6 +49,13 @@ section.sek{margin-top:14px}
 /* camera */
 .bk-obraz{position:relative;width:100%;touch-action:none;user-select:none;border-radius:8px;overflow:hidden;background:#000;aspect-ratio:16/9}
 .bk-obraz img{width:100%;height:100%;object-fit:contain;display:block;-webkit-user-drag:none}
+.bk-obrazwrap{position:relative}
+.bk-pauza{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;border-radius:8px;background:#0f172a99}
+.bk-pauza span{background:#f59e0b;color:#0b1220;font-weight:700;padding:6px 16px;border-radius:99px;font-size:15px}
+.bk-ramka.wyl{border-style:dashed;opacity:.45}
+button.b.pz{background:#f59e0b;color:#0b1220;font-weight:600}
+.pill.pz{color:var(--txt)}.pill.pz i{background:#f59e0b}
+.bk-karta.wyl .bk-gl,.bk-karta.wyl .bk-sia,.bk-karta.wyl .bk-syg,.bk-karta.wyl .bk-sygpod,.bk-karta.wyl .bk-dol{opacity:.35}
 .bk-obraz .brak{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--mut);font-size:14px;text-align:center;padding:16px}
 .bk-ramka{position:absolute;border:2px solid var(--k);border-radius:4px;box-shadow:0 0 0 1px #000a}
 .bk-ramka span{position:absolute;left:-2px;top:-2px;transform:translateY(-100%);font-size:12px;padding:1px 6px;border-radius:4px 4px 0 0;color:#fff;white-space:nowrap;background:var(--k);font-variant-numeric:tabular-nums}
@@ -120,9 +127,13 @@ footer{max-width:1440px;margin:0 auto;padding:0 16px 24px;font-size:12px;color:v
       <h2>📷 <span data-t="camera"></span></h2>
       <small id="bkFotoT"></small>
       <span class="sp"></span>
+      <button class="b mini" id="bkPauza"></button>
       <button class="b mini obrys" id="bkObrBtn" data-t="rotateBtn"></button>
     </div>
-    <div class="bk-obraz" id="bkObraz"><img id="bkImg" alt=""><div class="brak" id="bkBrak" data-t="noImage"></div></div>
+    <div class="bk-obrazwrap">
+      <div class="bk-obraz" id="bkObraz"><img id="bkImg" alt=""><div class="brak" id="bkBrak" data-t="noImage"></div></div>
+      <div class="bk-pauza" id="bkPauzaInfo" hidden><span data-t="pausedBanner"></span></div>
+    </div>
     <p class="bk-podp mut" id="bkPodp" data-t="areasHint"></p>
   </section>
 
@@ -179,6 +190,9 @@ const TXT = {
   pl: {
     sub: 'licznik bąbli fermentacji', connecting: 'łączenie…', live: 'na żywo · {fps} kl./s', offline: 'brak danych z licznika',
     camera: 'Kamera', imgAge: 'obraz sprzed {n} s', noImage: 'Czekam na obraz z kamery…', rotateBtn: '↻ Obróć 180°',
+    pause: '⏸ Wstrzymaj liczenie', resume: '▶ Wznów liczenie', pausedBanner: '⏸ Liczenie wstrzymane', pausedPill: 'pauza · nic nie liczy',
+    off: 'Wyłącz', on: 'Włącz', offT: 'Wyłącz liczenie tego gąsiora (np. pusty gąsior). Obszar rurki i próg zostają zapisane.', onT: 'Włącz z powrotem liczenie tego gąsiora',
+    stOff: '○ wyłączony', stPaused: '⏸ pauza',
     history: 'Historia', perMinute: '(bąbli na minutę)', r7d: '7 dni', rAll: 'Całość',
     data: 'Dane:', csvMin: 'minutowe (CSV)', csvHour: 'godzinowe (CSV)',
     stats: 'Statystyki fermentacji', fermSince: 'od {d}',
@@ -189,7 +203,7 @@ const TXT = {
     areasSmall: 'Za mały prostokąt, spróbuj ponownie.', imgAlt: 'Obraz z kamery z zaznaczonymi rurkami',
     settings: 'Ustawienia', minGap: 'Min. odstęp między bąblami:',
     save: 'Zapisz', saved: 'Zapisano ✓', saveFail: 'Nie udało się zapisać ustawień ({e}).',
-    tips: 'Wskazówki: kamera i gąsiory nieruchomo, stałe światło (lampka LED), ciemne tło za rurką i prostokąt obejmujący tylko rurkę z wodą. Ramka na obrazie mignie przy każdym policzonym bąblu. Wykres na karcie pokazuje sygnał (linia) i próg (przerywana). Próg jest stały, program nigdy go sam nie zmienia. Bąbel liczy się, gdy sygnał przetnie linię progu w górę. Ustaw próg nad szumem, a pod szczytami bąbli: kliknij albo przeciągnij na wykresie, użyj suwaka lub przycisków −/+. Bąble giną: obniż próg. Liczy za dużo: podnieś.',
+    tips: 'Wskazówki: kamera i gąsiory nieruchomo, stałe światło (lampka LED), ciemne tło za rurką i prostokąt obejmujący tylko rurkę z wodą. Ramka na obrazie mignie przy każdym policzonym bąblu. Wykres na karcie pokazuje sygnał (linia) i próg (przerywana). Próg jest stały, program nigdy go sam nie zmienia. Bąbel liczy się, gdy sygnał przetnie linię progu w górę. Ustaw próg nad szumem, a pod szczytami bąbli: kliknij albo przeciągnij na wykresie, użyj suwaka lub przycisków −/+. Bąble giną: obniż próg. Liczy za dużo: podnieś. Gdy robi się ciemno, wciśnij „Wstrzymaj liczenie”; pusty gąsior wyłącz przyciskiem „Wyłącz” na jego karcie. Czas pauzy nie zaniża wykresów ani średnich.',
     license: 'licencja MIT',
     jar: 'Gąsior {n}', bps: 'bąbli/s', avg10: '(średnio z 10 s)', perMin: 'Bąbli/min', perHour: 'Bąbli/godz.',
     instant: 'Chwilowo', last: 'Ostatni bąbel', total: 'Łącznie', since: 'Liczone od',
@@ -205,6 +219,9 @@ const TXT = {
   en: {
     sub: 'fermentation bubble counter', connecting: 'connecting…', live: 'live · {fps} fps', offline: 'no data from the counter',
     camera: 'Camera', imgAge: 'image {n} s old', noImage: 'Waiting for the camera image…', rotateBtn: '↻ Rotate 180°',
+    pause: '⏸ Pause counting', resume: '▶ Resume counting', pausedBanner: '⏸ Counting paused', pausedPill: 'paused · not counting',
+    off: 'Turn off', on: 'Turn on', offT: 'Stop counting this jar (e.g. an empty jar). The airlock area and threshold stay saved.', onT: 'Start counting this jar again',
+    stOff: '○ off', stPaused: '⏸ paused',
     history: 'History', perMinute: '(bubbles per minute)', r7d: '7 days', rAll: 'All',
     data: 'Data:', csvMin: 'per minute (CSV)', csvHour: 'per hour (CSV)',
     stats: 'Fermentation statistics', fermSince: 'since {d}',
@@ -215,7 +232,7 @@ const TXT = {
     areasSmall: 'Rectangle too small, try again.', imgAlt: 'Camera image with the marked airlocks',
     settings: 'Settings', minGap: 'Min. time between bubbles:',
     save: 'Save', saved: 'Saved ✓', saveFail: 'Could not save the settings ({e}).',
-    tips: 'Tips: keep the camera and jars still, use steady light (an LED lamp), a dark background behind the airlock and a rectangle that covers only the airlock with water. The frame on the image flashes for every counted bubble. The chart on each card shows the signal (line) and the threshold (dashed). The threshold is fixed, the program never changes it by itself. A bubble is counted when the signal crosses the threshold upwards. Put the threshold above the noise and below the bubble peaks: click or drag on the chart, use the slider or the −/+ buttons. Bubbles missed: lower it. Counting too many: raise it.',
+    tips: 'Tips: keep the camera and jars still, use steady light (an LED lamp), a dark background behind the airlock and a rectangle that covers only the airlock with water. The frame on the image flashes for every counted bubble. The chart on each card shows the signal (line) and the threshold (dashed). The threshold is fixed, the program never changes it by itself. A bubble is counted when the signal crosses the threshold upwards. Put the threshold above the noise and below the bubble peaks: click or drag on the chart, use the slider or the −/+ buttons. Bubbles missed: lower it. Counting too many: raise it. When it gets dark, press “Pause counting”; turn an empty jar off with “Turn off” on its card. Paused time does not pull the charts or averages down.',
     license: 'MIT License',
     jar: 'Jar {n}', bps: 'bubbles/s', avg10: '(10 s average)', perMin: 'Bubbles/min', perHour: 'Bubbles/hour',
     instant: 'Instant', last: 'Last bubble', total: 'Total', since: 'Counting since',
@@ -269,7 +286,7 @@ async function wczytajCfg() {
     try { cfg.obrot = JSON.parse(localStorage.getItem('kamera') || '{}').obr === true; } catch (e) { cfg.obrot = false; }
   }
   g('bkPr').value = cfg.przerwa_min ?? 0.35; g('bkPrV').textContent = g('bkPr').value;
-  budujKarty(); stosujObrot(); rysujRamki();
+  budujKarty(); stosujObrot(); pokazLiczenie();
 }
 async function zapiszCfg() {
   try {
@@ -281,6 +298,18 @@ async function zapiszCfg() {
 function potwierdz(btn, klucz) { btn.textContent = t('saved'); setTimeout(() => btn.textContent = t(klucz), 1500); }
 g('bkPr').oninput = () => g('bkPrV').textContent = g('bkPr').value;
 g('bkZapisz').onclick = async () => { cfg.przerwa_min = +g('bkPr').value; if (await zapiszCfg()) potwierdz(g('bkZapisz'), 'save'); };
+g('bkPauza').onclick = async () => { cfg.pauza = !cfg.pauza; pokazLiczenie(); await zapiszCfg(); };
+function pokazLiczenie() {   // pause and per-jar on/off, shown right away from the local settings
+  const pz = !!cfg.pauza, b = g('bkPauza');
+  b.textContent = pz ? t('resume') : t('pause'); b.classList.toggle('pz', pz);
+  g('bkPauzaInfo').hidden = !pz;
+  cfg.gasiory.forEach((gs, i) => {
+    const w = !!gs.wylaczony, k = g('bkW' + i); if (!k) return;
+    g('bkK' + i).classList.toggle('wyl', w);
+    k.textContent = w ? t('on') : t('off'); k.title = w ? t('onT') : t('offT'); k.classList.toggle('pz', w);
+  });
+  rysujRamki();
+}
 g('bkObrBtn').onclick = async () => { cfg.obrot = !cfg.obrot; stosujObrot(); rysujRamki(); await zapiszCfg(); };
 
 /* ---------- new fermentation: all counters and history start from zero ---------- */
@@ -309,7 +338,8 @@ function budujKarty() {
   <div class="bk-karta" id="bkK${i}" style="--k:${KOLORY[i]}">
     <div class="bk-nag"><span class="bk-kol"></span>
       <input class="bk-nazwa" id="bkN${i}" value="${esc(nazwa(i))}" maxlength="40" aria-label="${esc(t('nameAria'))}">
-      <span class="bk-st" id="bkS${i}"></span></div>
+      <span class="bk-st" id="bkS${i}"></span>
+      <button class="b mini obrys" id="bkW${i}"></button></div>
     <div class="bk-gl"><b id="bkBps${i}">–</b><span class="mut">${t('bps')} <small>${t('avg10')}</small></span></div>
     <div class="bk-sia">
       <div><span>${t('perMin')}</span><strong id="bkBpm${i}">–</strong></div>
@@ -337,6 +367,7 @@ function budujKarty() {
     przypnijWykresProgu(i);
     pokazProg(i);
     g('bkZ' + i).onclick = () => ustawTryb(zaznaczam === i ? -1 : i);
+    g('bkW' + i).onclick = async () => { cfg.gasiory[i].wylaczony = !cfg.gasiory[i].wylaczony; pokazLiczenie(); await zapiszCfg(); };
     g('bkR' + i).onclick = async () => {
       if (!confirm(t('resetQ', {name: nazwa(i)}))) return;
       cfg.gasiory[i].reset = Date.now() / 1000; await zapiszCfg();
@@ -398,15 +429,15 @@ async function odswiezStan() {
   } catch (e) { stan = null; }
   const swiezy = stan && Date.now() / 1000 - stan.t < 10;
   if (stan && stan.wersja) g('wersja').textContent = 'v' + String(stan.wersja).replace(/^\D+/, '');
-  g('bkLive').className = 'pill ' + (swiezy ? 'on' : stan === null && !fotoT ? '' : 'off');
-  g('bkLiveT').textContent = swiezy ? t('live', {fps: liczba(stan.fps)}) : t('offline');
+  g('bkLive').className = 'pill ' + (swiezy ? (stan.pauza ? 'pz' : 'on') : stan === null && !fotoT ? '' : 'off');
+  g('bkLiveT').textContent = swiezy ? (stan.pauza ? t('pausedPill') : t('live', {fps: liczba(stan.fps)})) : t('offline');
   for (let i = 0; i < N; i++) {
     const s = swiezy && stan.gasiory[i];
-    g('bkS' + i).textContent = !s ? t('stNoData') : (s.aktywny ? t('stCounting') : t('stMark'));
+    g('bkS' + i).textContent = !s ? t('stNoData') : s.wylaczony ? t('stOff') : stan.pauza ? t('stPaused') : s.aktywny ? t('stCounting') : t('stMark');
     g('bkBps' + i).textContent = s && s.aktywny ? liczba(s.bps, 2) : '–';
     g('bkBpm' + i).textContent = s && s.aktywny ? liczba(s.bpm, 0) : '–';
     g('bkBph' + i).textContent = s && s.aktywny ? liczba(s.bph, 0) : '–';
-    g('bkCh' + i).textContent = s && s.odstep ? `${liczba(1 / s.odstep, 2)}/s` : '–';
+    g('bkCh' + i).textContent = s && s.aktywny && s.odstep ? `${liczba(1 / s.odstep, 2)}/s` : '–';
     g('bkOst' + i).textContent = s ? kiedy(s.ostatni) : '–';
     g('bkLa' + i).textContent = s ? liczba(s.lacznie, 0) : '–';
     g('bkOd' + i).textContent = s ? dataGodz(s.od) : '–';
@@ -460,7 +491,7 @@ function odswiezObraz() {
 }
 function wiekObrazu() { g('bkFotoT').textContent = fotoT ? t('imgAge', {n: Math.round((Date.now() - fotoT) / 1000)}) : ''; }
 function ramka(r, i, tymcz) {
-  const d = document.createElement('div'); d.className = 'bk-ramka' + (tymcz ? ' tymcz' : ''); d.dataset.i = i;
+  const d = document.createElement('div'); d.className = 'bk-ramka' + (tymcz ? ' tymcz' : '') + (!tymcz && (cfg.gasiory[i] || {}).wylaczony ? ' wyl' : ''); d.dataset.i = i;
   d.style.cssText = `--k:${KOLORY[i]};left:${r[0] / os.w * 100}%;top:${r[1] / os.h * 100}%;width:${r[2] / os.w * 100}%;height:${r[3] / os.h * 100}%` + (tymcz ? ';border-style:dashed' : '');
   d.innerHTML = `<span class="bk-et"></span>`;
   return d;
@@ -500,7 +531,9 @@ obraz.addEventListener('pointerup', async () => {
 /* ---------- history ---------- */
 function parsuj(txt, krok) {   // rows from before the last "new fermentation" are hidden
   const od = cfg.reset_stat || 0;
-  return txt.split('\n').map(l => l.split(',').map(Number)).filter(a => a.length >= 2 && a.every(Number.isFinite) && a[0] + krok > od);
+  // an empty value means the jar was paused or switched off: it is left out, not counted as 0
+  return txt.split('\n').map(l => l.split(',').map(x => x.trim() === '' ? null : Number(x)))
+    .filter(a => a.length >= 2 && Number.isFinite(a[0]) && a.every(v => v === null || Number.isFinite(v)) && a[0] + krok > od);
 }
 async function wczytajHist() {
   const plik = ['7d', 'all'].includes(zakres) ? 'historia_godz.csv' : 'historia_min.csv';
@@ -527,13 +560,14 @@ function koszyki() {
   const mapa = new Map();
   for (const r of w) {
     if (r[0] < start) continue;
-    const k = Math.floor((r[0] - start) / dl), e = mapa.get(k) || {n: 0, s: new Array(N).fill(0)};
-    e.n++; for (let i = 0; i < N; i++) e.s[i] += r[i + 1] || 0; mapa.set(k, e);
+    const k = Math.floor((r[0] - start) / dl), e = mapa.get(k) || {n: new Array(N).fill(0), s: new Array(N).fill(0)};
+    for (let i = 0; i < N; i++) if (r[i + 1] != null) { e.s[i] += r[i + 1]; e.n[i]++; }
+    mapa.set(k, e);
   }
   const pkt = [];
   for (let k = 0; k * dl + start < teraz; k++) {
     const e = mapa.get(k);
-    pkt.push({t: start + k * dl + dl / 2, v: e ? e.s.map(s => s / (e.n * krok / 60)) : new Array(N).fill(null)});
+    pkt.push({t: start + k * dl + dl / 2, v: e ? e.s.map((s, i) => e.n[i] ? s / (e.n[i] * krok / 60) : null) : new Array(N).fill(null)});
   }
   return {pkt, start, koniec: teraz};
 }
@@ -591,8 +625,8 @@ wyk.addEventListener('pointerleave', () => { tip.style.display = 'none'; rysujWy
 
 /* ---------- statistics ---------- */
 function srednia(wiersze, i, odT, doT, krok) {
-  const w = wiersze.filter(r => r[0] >= odT && r[0] < doT); if (!w.length) return null;
-  return w.reduce((s, r) => s + (r[i + 1] || 0), 0) / (w.length * krok / 60);
+  const w = wiersze.filter(r => r[0] >= odT && r[0] < doT && r[i + 1] != null); if (!w.length) return null;
+  return w.reduce((s, r) => s + r[i + 1], 0) / (w.length * krok / 60);
 }
 function rysujTabele() {
   if (!N) return;
@@ -609,9 +643,9 @@ function rysujTabele() {
     return Math.abs(p) < 10 ? t('trSteady') : (p > 0 ? t('trUp', {p: Math.round(p)}) : t('trDown', {p: Math.round(p)}));
   };
   const maks = i => {
-    const w = h.filter(r => r[0] > teraz - 7 * 86400); if (!w.length) return '–';
-    const x = w.reduce((a, r) => (r[i + 1] || 0) > (a[i + 1] || 0) ? r : a);
-    return `${liczba((x[i + 1] || 0) / 60, 1)}/min <small class="mut">(${dataGodz(x[0])})</small>`;
+    const w = h.filter(r => r[0] > teraz - 7 * 86400 && r[i + 1] != null); if (!w.length) return '–';
+    const x = w.reduce((a, r) => r[i + 1] > a[i + 1] ? r : a);
+    return `${liczba(x[i + 1] / 60, 1)}/min <small class="mut">(${dataGodz(x[0])})</small>`;
   };
   const czas = i => { const x = s(i); if (!x) return '–'; const d = teraz - x.od; return t('days', {d: Math.floor(d / 86400), h: Math.floor(d % 86400 / 3600)}); };
   const godzina = i => {   // bubbles in the last hour, divided by the time actually counted
@@ -620,7 +654,7 @@ function rysujTabele() {
     return `${liczba(x.bph / min, 1)}/min`;
   };
   g('bkTab').innerHTML = `<tr><th></th>${cfg.gasiory.map((gs, i) => `<th><span class="bk-kol" style="--k:${KOLORY[i]};display:inline-block;margin-right:6px;vertical-align:-1px"></span>${esc(nazwa(i))}</th>`).join('')}</tr>` +
-    wiersz(t('rowNow'), i => s(i) ? `${liczba(s(i).bpm, 0)}/min` : '–') +
+    wiersz(t('rowNow'), i => s(i) && s(i).aktywny ? `${liczba(s(i).bpm, 0)}/min` : '–') +
     wiersz(t('rowHour'), godzina) +
     wiersz(t('rowDay'), i => { const v = srednia(m, i, teraz - 86400, teraz, 60); return v == null ? '–' : `${liczba(v, 1)}/min`; }) +
     wiersz(t('rowMax'), maks) +

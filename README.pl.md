@@ -19,6 +19,7 @@
 - Statystyki fermentacji: średnie, najaktywniejsza godzina, trend (przyspiesza / zwalnia)
 - Obraz z kamery na żywo na górze strony; ramka rurki miga przy każdym policzonym bąblu
 - Zaznaczanie rurek myszą bezpośrednio na obrazie z kamery
+- Przycisk **pauzy** dla wszystkich rurek (np. na noc) i **wyłącznik** każdego gąsiora; czas pauzy nie zaniża wykresów i średnich
 - Przycisk **Nowa fermentacja**: liczniki i historia zaczynają się od zera, stare dane zostają w archiwum CSV
 - Interfejs po polsku i po angielsku (flagi w prawym górnym rogu)
 - Małe obciążenie: ok. 15% jednego rdzenia na Raspberry Pi 4 i płytkach z RK3399

@@ -19,6 +19,7 @@
 - Fermentation statistics: averages, busiest hour, trend (speeding up / slowing down)
 - Live camera image at the top of the page; the airlock frame flashes for every counted bubble
 - Mark the airlocks with the mouse directly on the camera image
+- **Pause** button for all airlocks (e.g. at night) and an **on/off** switch for each jar; paused time does not pull the charts and averages down
 - **New fermentation** button: all counters and the history start from zero, the old data is archived as CSV
 - Polish and English interface (flags in the top-right corner)
 - Light on resources: ~15% of one core on a Raspberry Pi 4 / RK3399 board
