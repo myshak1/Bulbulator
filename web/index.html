@@ -104,7 +104,25 @@ button.b.pz{background:#f59e0b;color:#0b1220;font-weight:600}
 .bk-tab td:first-child{white-space:normal;min-width:130px}.bk-tab td small{display:block}
 .bk-tab th{color:var(--mut);font-weight:600}
 .bk-tab td:not(:first-child),.bk-tab th:not(:first-child){text-align:right;font-variant-numeric:tabular-nums}
-.ust{display:flex;flex-wrap:wrap;gap:14px;align-items:flex-end}
+.ust{display:flex;flex-wrap:wrap;gap:14px 28px;align-items:flex-start}
+.ust .chk{flex-direction:row!important;align-items:center;gap:8px!important;min-width:0!important;flex:0 0 auto!important;color:var(--txt)!important;font-size:14px!important}
+.ust .ok{color:var(--ok);font-weight:600}
+.ust .grupa{display:flex;flex-direction:column;gap:8px;flex:1;min-width:260px;max-width:520px}
+.ust .grupa label{max-width:none}
+.ciemno-teraz.za{color:#f59e0b;font-weight:600}
+select.b{background:var(--panel2);color:var(--txt);border:1px solid var(--line);color-scheme:dark;max-width:100%;font-size:13px;padding:4px 8px}
+.notatki{margin-top:12px;border-top:1px solid var(--line);padding-top:10px}
+.not-form{display:flex;gap:6px;flex-wrap:wrap}
+.not-form input{background:var(--panel2);color:var(--txt);border:1px solid var(--line);border-radius:8px;padding:5px 8px;font:inherit;font-size:13px;color-scheme:dark}
+.not-form input[type=text]{flex:1;min-width:180px}
+.not-lista{list-style:none;margin:8px 0 0;padding:0;font-size:13px;max-height:180px;overflow-y:auto}
+.not-lista li{display:flex;gap:8px;align-items:baseline;padding:4px 0;border-bottom:1px solid var(--line)}
+.not-lista li:last-child{border-bottom:0}
+.not-lista li .tx{flex:1;min-width:0;overflow-wrap:anywhere}
+.not-lista li i{color:#f59e0b;font-style:normal}
+.not-lista button{background:none;border:0;color:var(--mut);cursor:pointer;font-size:13px;padding:0 4px}.not-lista button:hover{color:#fca5a5}
+.arch-info{font-size:13px;margin-top:8px;line-height:1.6}.arch-info a{color:inherit}
+.arch-info b{font-variant-numeric:tabular-nums}
 .ust label{display:flex;flex-direction:column;font-size:13px;color:var(--mut);min-width:220px;max-width:520px;flex:1;gap:4px}
 .tips{font-size:13px;margin:12px 0 0;line-height:1.5}
 footer{max-width:1440px;margin:0 auto;padding:0 16px 24px;font-size:12px;color:var(--mut);display:flex;gap:6px 14px;flex-wrap:wrap}footer a{color:inherit}
@@ -132,7 +150,7 @@ footer{max-width:1440px;margin:0 auto;padding:0 16px 24px;font-size:12px;color:v
     </div>
     <div class="bk-obrazwrap">
       <div class="bk-obraz" id="bkObraz"><img id="bkImg" alt=""><div class="brak" id="bkBrak" data-t="noImage"></div></div>
-      <div class="bk-pauza" id="bkPauzaInfo" hidden><span data-t="pausedBanner"></span></div>
+      <div class="bk-pauza" id="bkPauzaInfo" hidden><span id="bkPauzaTxt"></span></div>
     </div>
     <p class="bk-podp mut" id="bkPodp" data-t="areasHint"></p>
   </section>
@@ -153,6 +171,7 @@ footer{max-width:1440px;margin:0 auto;padding:0 16px 24px;font-size:12px;color:v
   <section class="panel" id="hist">
     <div class="p-nag">
       <h2><span data-t="history"></span> <small data-t="perMinute"></small></h2>
+      <select class="b mini" id="bkFerm" hidden aria-label="Fermentacja"></select>
       <span class="sp"></span>
       <div class="bk-zak" id="bkZak">
         <button class="b mini" data-z="6h">6 h</button><button class="b mini" data-z="24h">24 h</button><button class="b mini" data-z="48h">48 h</button>
@@ -164,15 +183,28 @@ footer{max-width:1440px;margin:0 auto;padding:0 16px 24px;font-size:12px;color:v
       <canvas id="bkCanvas"></canvas>
       <div class="bk-tip" id="bkTip"></div>
     </div>
-    <div class="csv mut"><span data-t="data"></span> <a href="historia_min.csv" data-t="csvMin"></a> · <a href="historia_godz.csv" data-t="csvHour"></a></div>
+    <div class="csv mut" id="bkCsv"><span data-t="data"></span> <a href="historia_min.csv" data-t="csvMin"></a> · <a href="historia_godz.csv" data-t="csvHour"></a></div>
+    <div class="arch-info mut" id="bkArchInfo" hidden></div>
+    <div class="notatki">
+      <form class="not-form" id="bkNotForm">
+        <input type="datetime-local" id="bkNotT" data-ta="noteTime">
+        <input type="text" id="bkNotTxt" maxlength="100" data-tp="notePh" data-ta="notePh">
+        <button class="b mini" type="submit" data-t="noteAdd"></button>
+      </form>
+      <ul class="not-lista" id="bkNotLista"></ul>
+    </div>
   </section>
 </div>
 
 <section class="panel sek">
   <div class="p-nag"><h2 data-t="settings"></h2></div>
   <div class="ust">
-    <label><span><span data-t="minGap"></span> <b id="bkPrV"></b> s</span><input type="range" id="bkPr" min="0.1" max="2" step="0.05"></label>
-    <button class="b" id="bkZapisz" data-t="save"></button>
+    <label><span><span data-t="minGap"></span> <b id="bkPrV"></b> s <small class="ok" id="bkPrOk"></small></span><input type="range" id="bkPr" min="0.1" max="2" step="0.05"></label>
+    <div class="grupa">
+      <label class="chk"><input type="checkbox" id="bkAuto"> <span data-t="autoDark"></span> <small class="ok" id="bkAutoOk"></small></label>
+      <label><span><span data-t="darkLevel"></span> <b id="bkJmV"></b> · <span class="ciemno-teraz" id="bkJmTeraz"></span></span><input type="range" id="bkJm" min="1" max="160" step="1"></label>
+      <small class="mut" data-t="autoDarkHint"></small>
+    </div>
   </div>
   <p class="tips mut" data-t="tips"></p>
 </section>
@@ -192,18 +224,25 @@ const TXT = {
     camera: 'Kamera', imgAge: 'obraz sprzed {n} s', noImage: 'Czekam na obraz z kamery…', rotateBtn: '↻ Obróć 180°',
     pause: '⏸ Wstrzymaj liczenie', resume: '▶ Wznów liczenie', pausedBanner: '⏸ Liczenie wstrzymane', pausedPill: 'pauza · nic nie liczy',
     off: 'Wyłącz', on: 'Włącz', offT: 'Wyłącz liczenie tego gąsiora (np. pusty gąsior). Obszar rurki i próg zostają zapisane.', onT: 'Włącz z powrotem liczenie tego gąsiora',
-    stOff: '○ wyłączony', stPaused: '⏸ pauza',
+    stOff: '○ wyłączony', stPaused: '⏸ pauza', stDark: '🌙 za ciemno', darkBanner: '🌙 Za ciemno · liczenie wstrzymane', darkPill: 'za ciemno · nic nie liczy',
+    autoDark: '🌙 Automatyczna pauza, gdy jest za ciemno', darkLevel: 'Próg jasności:', darkNow: 'teraz {v}',
+    autoDarkHint: 'Liczenie wstrzymuje się samo, gdy obszary rurek są ciemniejsze niż próg przez 30 s, i wraca, gdy są jaśniejsze przez 30 s. Ustaw próg trochę poniżej jasności wieczorem, gdy kamera jeszcze dobrze widzi.',
+    fermNow: 'Bieżąca fermentacja', fermArch: 'Porównaj z: {od} – {do} ({d})', nowShort: 'teraz',
+    archSum: 'Archiwum: {od} – {do}, czas {czas}.', archTotal: '{name}: <b>{n}</b> bąbli', archCsv: 'Pliki:', archLoad: 'Wczytuję archiwum…',
+    dayAx: '{n} d', dayAxTitle: 'oś: dni od początku fermentacji', dayTip: '{d} d {h} h od początku',
+    noteAdd: '＋ Dodaj notatkę', notePh: 'Notatka, np. dosypałem cukru, zlałem znad osadu', noteTime: 'Czas notatki',
+    noteDel: 'Usuń notatkę', noteDelQ: 'Usunąć tę notatkę?', noNotes: 'Brak notatek. Zapisz tu np. dosypanie cukru albo zlewanie, a pojawi się znacznik na wykresie.', archNote: 'arch.',
     history: 'Historia', perMinute: '(bąbli na minutę)', r7d: '7 dni', rAll: 'Całość',
     data: 'Dane:', csvMin: 'minutowe (CSV)', csvHour: 'godzinowe (CSV)',
     stats: 'Statystyki fermentacji', fermSince: 'od {d}',
-    newFerm: '⟲ Nowa fermentacja', newFermQ: 'Zacząć nową fermentację?\n\nLiczniki wszystkich gąsiorów, historia i statystyki zaczną się od zera. Dotychczasowe dane zostaną zachowane na serwerze jako archiwum CSV.',
+    newFerm: '⟲ Nowa fermentacja', newFermQ: 'Zacząć nową fermentację?\n\nLiczniki wszystkich gąsiorów, historia i statystyki zaczną się od zera. Dotychczasowe dane i notatki trafią do archiwum, z którym możesz potem porównywać nową fermentację.',
     newFermBusy: 'Zeruję…', newFermDone: 'Wyzerowano ✓',
     areasHint: 'Żeby zaznaczyć rurkę, kliknij „Zaznacz rurkę” na karcie gąsiora i przeciągnij prostokąt na obrazie.',
     areasDrag: 'Przeciągnij prostokąt wokół rurki: {name}. Kliknij „Zaznacz rurkę” ponownie, żeby anulować.', areasSaved: 'Zapisano obszar: {name}.',
     areasSmall: 'Za mały prostokąt, spróbuj ponownie.', imgAlt: 'Obraz z kamery z zaznaczonymi rurkami',
     settings: 'Ustawienia', minGap: 'Min. odstęp między bąblami:',
     save: 'Zapisz', saved: 'Zapisano ✓', saveFail: 'Nie udało się zapisać ustawień ({e}).',
-    tips: 'Wskazówki: kamera i gąsiory nieruchomo, stałe światło (lampka LED), ciemne tło za rurką i prostokąt obejmujący tylko rurkę z wodą. Ramka na obrazie mignie przy każdym policzonym bąblu. Wykres na karcie pokazuje sygnał (linia) i próg (przerywana). Próg jest stały, program nigdy go sam nie zmienia. Bąbel liczy się, gdy sygnał przetnie linię progu w górę. Ustaw próg nad szumem, a pod szczytami bąbli: kliknij albo przeciągnij na wykresie, użyj suwaka lub przycisków −/+. Bąble giną: obniż próg. Liczy za dużo: podnieś. Gdy robi się ciemno, wciśnij „Wstrzymaj liczenie”; pusty gąsior wyłącz przyciskiem „Wyłącz” na jego karcie. Czas pauzy nie zaniża wykresów ani średnich.',
+    tips: 'Wskazówki: kamera i gąsiory nieruchomo, stałe światło (lampka LED), ciemne tło za rurką i prostokąt obejmujący tylko rurkę z wodą. Ramka na obrazie mignie przy każdym policzonym bąblu. Wykres na karcie pokazuje sygnał (linia) i próg (przerywana). Próg jest stały, program nigdy go sam nie zmienia. Bąbel liczy się, gdy sygnał przetnie linię progu w górę. Ustaw próg nad szumem, a pod szczytami bąbli: kliknij albo przeciągnij na wykresie, użyj suwaka lub przycisków −/+. Bąble giną: obniż próg. Liczy za dużo: podnieś. Gdy robi się ciemno, wciśnij „Wstrzymaj liczenie” albo włącz automatyczną pauzę w ustawieniach; pusty gąsior wyłącz przyciskiem „Wyłącz” na jego karcie. Czas pauzy nie zaniża wykresów ani średnich. Ustawienia zapisują się od razu i są wspólne dla wszystkich otwartych stron.',
     license: 'licencja MIT',
     jar: 'Gąsior {n}', bps: 'bąbli/s', avg10: '(średnio z 10 s)', perMin: 'Bąbli/min', perHour: 'Bąbli/godz.',
     instant: 'Chwilowo', last: 'Ostatni bąbel', total: 'Łącznie', since: 'Liczone od',
@@ -221,18 +260,25 @@ const TXT = {
     camera: 'Camera', imgAge: 'image {n} s old', noImage: 'Waiting for the camera image…', rotateBtn: '↻ Rotate 180°',
     pause: '⏸ Pause counting', resume: '▶ Resume counting', pausedBanner: '⏸ Counting paused', pausedPill: 'paused · not counting',
     off: 'Turn off', on: 'Turn on', offT: 'Stop counting this jar (e.g. an empty jar). The airlock area and threshold stay saved.', onT: 'Start counting this jar again',
-    stOff: '○ off', stPaused: '⏸ paused',
+    stOff: '○ off', stPaused: '⏸ paused', stDark: '🌙 too dark', darkBanner: '🌙 Too dark · counting paused', darkPill: 'too dark · not counting',
+    autoDark: '🌙 Pause automatically when it is too dark', darkLevel: 'Darkness level:', darkNow: 'now {v}',
+    autoDarkHint: 'Counting pauses by itself when the airlock areas stay darker than this level for 30 s and resumes when they stay brighter for 30 s. Set it a little below the brightness in the evening while the camera still sees well.',
+    fermNow: 'Current fermentation', fermArch: 'Compare with: {od} – {do} ({d})', nowShort: 'now',
+    archSum: 'Archive: {od} – {do}, duration {czas}.', archTotal: '{name}: <b>{n}</b> bubbles', archCsv: 'Files:', archLoad: 'Loading the archive…',
+    dayAx: '{n} d', dayAxTitle: 'axis: days since the start of fermentation', dayTip: '{d} d {h} h since the start',
+    noteAdd: '＋ Add note', notePh: 'Note, e.g. added sugar, racked', noteTime: 'Time of the note',
+    noteDel: 'Delete note', noteDelQ: 'Delete this note?', noNotes: 'No notes yet. Write down e.g. adding sugar or racking and a marker appears on the chart.', archNote: 'arch.',
     history: 'History', perMinute: '(bubbles per minute)', r7d: '7 days', rAll: 'All',
     data: 'Data:', csvMin: 'per minute (CSV)', csvHour: 'per hour (CSV)',
     stats: 'Fermentation statistics', fermSince: 'since {d}',
-    newFerm: '⟲ New fermentation', newFermQ: 'Start a new fermentation?\n\nThe counters of all jars, the history and the statistics start from zero. The old data is kept on the server as a CSV archive.',
+    newFerm: '⟲ New fermentation', newFermQ: 'Start a new fermentation?\n\nThe counters of all jars, the history and the statistics start from zero. The old data and notes go to the archive, which you can later compare the new fermentation with.',
     newFermBusy: 'Resetting…', newFermDone: 'Reset done ✓',
     areasHint: 'To mark an airlock, click “Mark airlock” on a jar card and drag a rectangle on the image.',
     areasDrag: 'Drag a rectangle around the airlock: {name}. Click “Mark airlock” again to cancel.', areasSaved: 'Area saved: {name}.',
     areasSmall: 'Rectangle too small, try again.', imgAlt: 'Camera image with the marked airlocks',
     settings: 'Settings', minGap: 'Min. time between bubbles:',
     save: 'Save', saved: 'Saved ✓', saveFail: 'Could not save the settings ({e}).',
-    tips: 'Tips: keep the camera and jars still, use steady light (an LED lamp), a dark background behind the airlock and a rectangle that covers only the airlock with water. The frame on the image flashes for every counted bubble. The chart on each card shows the signal (line) and the threshold (dashed). The threshold is fixed, the program never changes it by itself. A bubble is counted when the signal crosses the threshold upwards. Put the threshold above the noise and below the bubble peaks: click or drag on the chart, use the slider or the −/+ buttons. Bubbles missed: lower it. Counting too many: raise it. When it gets dark, press “Pause counting”; turn an empty jar off with “Turn off” on its card. Paused time does not pull the charts or averages down.',
+    tips: 'Tips: keep the camera and jars still, use steady light (an LED lamp), a dark background behind the airlock and a rectangle that covers only the airlock with water. The frame on the image flashes for every counted bubble. The chart on each card shows the signal (line) and the threshold (dashed). The threshold is fixed, the program never changes it by itself. A bubble is counted when the signal crosses the threshold upwards. Put the threshold above the noise and below the bubble peaks: click or drag on the chart, use the slider or the −/+ buttons. Bubbles missed: lower it. Counting too many: raise it. When it gets dark, press “Pause counting” or turn on the automatic pause in the settings; turn an empty jar off with “Turn off” on its card. Paused time does not pull the charts or averages down. Settings are saved at once and shared by all open pages.',
     license: 'MIT License',
     jar: 'Jar {n}', bps: 'bubbles/s', avg10: '(10 s average)', perMin: 'Bubbles/min', perHour: 'Bubbles/hour',
     instant: 'Instant', last: 'Last bubble', total: 'Total', since: 'Counting since',
@@ -256,6 +302,8 @@ const LANG = jezykStartowy(), LOC = LANG === 'pl' ? 'pl-PL' : 'en-GB';
 const t = (k, v = {}) => (TXT[LANG][k] ?? k).replace(/\{(\w+)\}/g, (_, x) => v[x] ?? '');
 document.documentElement.lang = LANG;
 document.querySelectorAll('[data-t]').forEach(e => e.textContent = t(e.dataset.t));
+document.querySelectorAll('[data-tp]').forEach(e => e.placeholder = t(e.dataset.tp));
+document.querySelectorAll('[data-ta]').forEach(e => e.setAttribute('aria-label', t(e.dataset.ta)));
 document.querySelectorAll('.flagi button').forEach(b => {
   b.classList.toggle('on', b.dataset.lang === LANG);
   b.onclick = () => { try { localStorage.setItem('bulbulator-lang', b.dataset.lang); } catch (e) {} const u = new URL(location.href); u.searchParams.delete('lang'); location.href = u.toString(); };
@@ -273,51 +321,98 @@ const nazwa = i => { const n = (cfg.gasiory[i] || {}).nazwa || ''; const m = /^(
 const dataGodz = ts => new Date(ts * 1000).toLocaleString(LOC, {day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit'});
 g('bkImg').alt = t('imgAlt'); g('bkCanvas').setAttribute('aria-label', t('chartAria'));
 
-/* ---------- config ---------- */
+/* ---------- config ----------
+   Every change is applied to the NEWEST config on the server (read just before saving), and the
+   page re-reads the config every 5 s. Two open pages (or a phone in the background) can no longer
+   overwrite each other's settings with an old copy. */
+const gas = (c, i) => { if (!Array.isArray(c.gasiory)) c.gasiory = []; while (c.gasiory.length <= i) c.gasiory.push({}); return c.gasiory[i]; };
+let cfgTekst = '';
+const wToku = new Set();   // jars whose threshold is being changed on this page right now
+async function pobierzCfg() {
+  const r = await fetch('config.json?t=' + Date.now(), {cache: 'no-store'});
+  if (!r.ok) throw new Error(r.status);
+  const txt = await r.text();
+  return [txt, JSON.parse(txt)];
+}
 async function wczytajCfg() {
-  try {
-    const r = await fetch('config.json?t=' + Date.now(), {cache: 'no-store'});
-    if (r.ok) { const c = await r.json(); if (c && Array.isArray(c.gasiory) && c.gasiory.length) cfg = c; }
-  } catch (e) {}
+  try { const [txt, c] = await pobierzCfg(); if (c && Array.isArray(c.gasiory) && c.gasiory.length) { cfg = c; cfgTekst = txt; } } catch (e) {}
   if (!cfg.gasiory.length) cfg.gasiory = [1, 2].map(n => ({nazwa: `Gąsior ${n}`, roi: null, reset: 0}));
   cfg.gasiory = cfg.gasiory.slice(0, 4);
   N = cfg.gasiory.length;
   if (typeof cfg.obrot !== 'boolean') {   // older installs kept this setting in the browser
     try { cfg.obrot = JSON.parse(localStorage.getItem('kamera') || '{}').obr === true; } catch (e) { cfg.obrot = false; }
   }
-  g('bkPr').value = cfg.przerwa_min ?? 0.35; g('bkPrV').textContent = g('bkPr').value;
-  budujKarty(); stosujObrot(); pokazLiczenie();
+  budujKarty(); odswiezWidok();
 }
-async function zapiszCfg() {
+async function zmien(fn) {   // fn sets one thing; it runs on this page's copy and on the newest config
+  fn(cfg); odswiezWidok();
   try {
-    const r = await fetch('config.json', {method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(cfg)});
+    let c = null;
+    try { c = (await pobierzCfg())[1]; } catch (e) {}
+    if (!c || typeof c !== 'object' || !Array.isArray(c.gasiory)) c = JSON.parse(JSON.stringify(cfg));
+    fn(c);
+    const body = JSON.stringify(c);
+    const r = await fetch('config.json', {method: 'PUT', headers: {'Content-Type': 'application/json'}, body});
     if (!r.ok) throw new Error(r.status);
+    cfgTekst = body; przyjmijCfg(c);
     return true;
   } catch (e) { alert(t('saveFail', {e: e.message})); return false; }
 }
-function potwierdz(btn, klucz) { btn.textContent = t('saved'); setTimeout(() => btn.textContent = t(klucz), 1500); }
+async function odswiezCfg() {
+  if (document.hidden) return;
+  try { const [txt, c] = await pobierzCfg(); if (txt !== cfgTekst && c && Array.isArray(c.gasiory) && c.gasiory.length) { cfgTekst = txt; przyjmijCfg(c); } } catch (e) {}
+}
+function przyjmijCfg(c) {   // take over a config read from the server, keeping what is being edited here
+  const stare = cfg;
+  c.gasiory = c.gasiory.slice(0, 4);
+  c.gasiory.forEach((gs, i) => { if (wToku.has(i) && stare.gasiory[i]) gs.prog = stare.gasiory[i].prog; });
+  cfg = c;
+  if (cfg.gasiory.length !== N) { N = cfg.gasiory.length; budujKarty(); }
+  cfg.gasiory.forEach((gs, i) => { const n = g('bkN' + i); if (n && document.activeElement !== n) n.value = nazwa(i); pokazProg(i); });
+  odswiezWidok();
+}
+function odswiezWidok() {   // everything that shows a setting
+  stosujObrot(); pokazLiczenie();
+  if (document.activeElement !== g('bkPr')) { g('bkPr').value = cfg.przerwa_min ?? 0.35; g('bkPrV').textContent = g('bkPr').value; }
+  g('bkAuto').checked = !!cfg.auto_ciemno;
+  if (document.activeElement !== g('bkJm')) { g('bkJm').value = cfg.jasnosc_min ?? 20; g('bkJmV').textContent = g('bkJm').value; }
+  rysujNotatki(); rysujWykres(); rysujTabele();
+}
+function zapisano(el) { el.textContent = t('saved'); clearTimeout(el._t); el._t = setTimeout(() => el.textContent = '', 1500); }
 g('bkPr').oninput = () => g('bkPrV').textContent = g('bkPr').value;
-g('bkZapisz').onclick = async () => { cfg.przerwa_min = +g('bkPr').value; if (await zapiszCfg()) potwierdz(g('bkZapisz'), 'save'); };
-g('bkPauza').onclick = async () => { cfg.pauza = !cfg.pauza; pokazLiczenie(); await zapiszCfg(); };
+g('bkPr').onchange = async () => { const v = +g('bkPr').value; if (await zmien(c => c.przerwa_min = v)) zapisano(g('bkPrOk')); };
+g('bkAuto').onchange = async e => { const v = e.target.checked; if (await zmien(c => c.auto_ciemno = v)) zapisano(g('bkAutoOk')); };
+g('bkJm').oninput = () => { g('bkJmV').textContent = g('bkJm').value; pokazJasnosc(); };
+g('bkJm').onchange = async () => { const v = +g('bkJm').value; if (await zmien(c => c.jasnosc_min = v)) zapisano(g('bkAutoOk')); };
+g('bkPauza').onclick = () => { const v = !cfg.pauza; zmien(c => c.pauza = v); };
+g('bkObrBtn').onclick = () => { const v = !cfg.obrot; zmien(c => c.obrot = v); };
+function pokazJasnosc() {
+  const j = stan && typeof stan.jasnosc === 'number' ? stan.jasnosc : null, el = g('bkJmTeraz');
+  el.textContent = j == null ? '' : t('darkNow', {v: Math.round(j)});
+  el.classList.toggle('za', j != null && j < +g('bkJm').value);
+}
+function pokazBaner() {
+  const ciemno = !cfg.pauza && !!(stan && stan.ciemno);
+  g('bkPauzaInfo').hidden = !(cfg.pauza || ciemno);
+  g('bkPauzaTxt').textContent = cfg.pauza ? t('pausedBanner') : t('darkBanner');
+}
 function pokazLiczenie() {   // pause and per-jar on/off, shown right away from the local settings
   const pz = !!cfg.pauza, b = g('bkPauza');
   b.textContent = pz ? t('resume') : t('pause'); b.classList.toggle('pz', pz);
-  g('bkPauzaInfo').hidden = !pz;
+  pokazBaner();
   cfg.gasiory.forEach((gs, i) => {
     const w = !!gs.wylaczony, k = g('bkW' + i); if (!k) return;
     g('bkK' + i).classList.toggle('wyl', w);
     k.textContent = w ? t('on') : t('off'); k.title = w ? t('onT') : t('offT'); k.classList.toggle('pz', w);
   });
-  rysujRamki();
+  if (!rys) rysujRamki();
 }
-g('bkObrBtn').onclick = async () => { cfg.obrot = !cfg.obrot; stosujObrot(); rysujRamki(); await zapiszCfg(); };
 
 /* ---------- new fermentation: all counters and history start from zero ---------- */
 g('bkNowa').onclick = async () => {
   if (!confirm(t('newFermQ'))) return;
-  const b = g('bkNowa');
-  cfg.reset_stat = Date.now() / 1000;
-  if (!await zapiszCfg()) return;
+  const b = g('bkNowa'), ts = Date.now() / 1000;
+  if (!await zmien(c => c.reset_stat = ts)) return;
   b.disabled = true; b.textContent = t('newFermBusy');
   hist = {plik: hist ? hist.plik : 'historia_min.csv', wiersze: []}; statDane = {min: [], godz: []};
   rysujWykres(); rysujTabele();
@@ -326,7 +421,7 @@ g('bkNowa').onclick = async () => {
     if ((stan && (stan.reset_stat || 0) >= cfg.reset_stat - 1) || Date.now() > czekaj) {
       clearInterval(sprawdz); b.disabled = false; b.textContent = t('newFermDone');
       setTimeout(() => b.textContent = t('newFerm'), 2500);
-      wczytajHist(); wczytajStatystyki();
+      wczytajHist(); wczytajStatystyki(); wczytajArchiwa();
     }
   }, 1000);
 };
@@ -359,7 +454,7 @@ function budujKarty() {
     </div>
   </div>`; }).join('');
   cfg.gasiory.forEach((gs, i) => {
-    g('bkN' + i).onchange = async e => { cfg.gasiory[i].nazwa = e.target.value.trim() || `Gąsior ${i + 1}`; await zapiszCfg(); rysujRamki(); rysujLegende(); rysujTabele(); };
+    g('bkN' + i).onchange = e => { const v = e.target.value.trim() || `Gąsior ${i + 1}`; zmien(c => gas(c, i).nazwa = v); };
     g('bkCz' + i).oninput = e => ustawProg(i, zSuwaka(+e.target.value), false);
     g('bkCz' + i).onchange = () => zapiszProg(i, 0);
     g('bkCzM' + i).onclick = () => { ustawProg(i, (progGas(i) || 1) / 1.1); zapiszProg(i, 700); };
@@ -367,10 +462,10 @@ function budujKarty() {
     przypnijWykresProgu(i);
     pokazProg(i);
     g('bkZ' + i).onclick = () => ustawTryb(zaznaczam === i ? -1 : i);
-    g('bkW' + i).onclick = async () => { cfg.gasiory[i].wylaczony = !cfg.gasiory[i].wylaczony; pokazLiczenie(); await zapiszCfg(); };
-    g('bkR' + i).onclick = async () => {
+    g('bkW' + i).onclick = () => { const v = !cfg.gasiory[i].wylaczony; zmien(c => gas(c, i).wylaczony = v); };
+    g('bkR' + i).onclick = () => {
       if (!confirm(t('resetQ', {name: nazwa(i)}))) return;
-      cfg.gasiory[i].reset = Date.now() / 1000; await zapiszCfg();
+      const ts = Date.now() / 1000; zmien(c => gas(c, i).reset = ts);
     };
   });
 }
@@ -386,6 +481,7 @@ function pokazProg(i) {
   if (p != null && document.activeElement !== g('bkCz' + i)) g('bkCz' + i).value = doSuwaka(p);
 }
 function ustawProg(i, p, odswiezSuwak = true) {
+  wToku.add(i);
   cfg.gasiory[i].prog = Math.round(Math.min(PMAX, Math.max(PMIN, p)) * 100) / 100;
   g('bkCzV' + i).textContent = liczba(cfg.gasiory[i].prog, 2);
   if (odswiezSuwak) g('bkCz' + i).value = doSuwaka(cfg.gasiory[i].prog);
@@ -394,7 +490,12 @@ function ustawProg(i, p, odswiezSuwak = true) {
 }
 function zapiszProg(i, zwloka) {
   clearTimeout(zapisProgu[i]);
-  zapisProgu[i] = setTimeout(async () => { if (await zapiszCfg()) { g('bkCzV' + i).style.color = 'var(--ok)'; setTimeout(() => g('bkCzV' + i).style.color = '', 800); } }, zwloka);
+  wToku.add(i);
+  zapisProgu[i] = setTimeout(async () => {
+    const p = cfg.gasiory[i].prog, ok = await zmien(c => gas(c, i).prog = p);
+    wToku.delete(i);
+    if (ok) { g('bkCzV' + i).style.color = 'var(--ok)'; setTimeout(() => g('bkCzV' + i).style.color = '', 800); }
+  }, zwloka);
 }
 function przypnijWykresProgu(i) {   // click or drag on the signal chart = set the threshold at that height
   const cv = g('bkSyg' + i);
@@ -429,11 +530,12 @@ async function odswiezStan() {
   } catch (e) { stan = null; }
   const swiezy = stan && Date.now() / 1000 - stan.t < 10;
   if (stan && stan.wersja) g('wersja').textContent = 'v' + String(stan.wersja).replace(/^\D+/, '');
-  g('bkLive').className = 'pill ' + (swiezy ? (stan.pauza ? 'pz' : 'on') : stan === null && !fotoT ? '' : 'off');
-  g('bkLiveT').textContent = swiezy ? (stan.pauza ? t('pausedPill') : t('live', {fps: liczba(stan.fps)})) : t('offline');
+  g('bkLive').className = 'pill ' + (swiezy ? (stan.pauza || stan.ciemno ? 'pz' : 'on') : stan === null && !fotoT ? '' : 'off');
+  g('bkLiveT').textContent = swiezy ? (stan.pauza ? t('pausedPill') : stan.ciemno ? t('darkPill') : t('live', {fps: liczba(stan.fps)})) : t('offline');
+  pokazBaner(); pokazJasnosc();
   for (let i = 0; i < N; i++) {
     const s = swiezy && stan.gasiory[i];
-    g('bkS' + i).textContent = !s ? t('stNoData') : s.wylaczony ? t('stOff') : stan.pauza ? t('stPaused') : s.aktywny ? t('stCounting') : t('stMark');
+    g('bkS' + i).textContent = !s ? t('stNoData') : s.wylaczony ? t('stOff') : stan.pauza ? t('stPaused') : stan.ciemno ? t('stDark') : s.aktywny ? t('stCounting') : t('stMark');
     g('bkBps' + i).textContent = s && s.aktywny ? liczba(s.bps, 2) : '–';
     g('bkBpm' + i).textContent = s && s.aktywny ? liczba(s.bpm, 0) : '–';
     g('bkBph' + i).textContent = s && s.aktywny ? liczba(s.bph, 0) : '–';
@@ -523,14 +625,13 @@ obraz.addEventListener('pointermove', e => {
 obraz.addEventListener('pointerup', async () => {
   if (!rys) return; const r = rys.r; rys = null;
   const i = zaznaczam, ok = r && r[2] >= 8 && r[3] >= 8;
-  if (ok) { cfg.gasiory[i].roi = r; await zapiszCfg(); }
+  if (ok) await zmien(c => gas(c, i).roi = r);
   ustawTryb(-1, ok ? t('areasSaved', {name: nazwa(i)}) : t('areasSmall'));
   rysujRamki();
 });
 
 /* ---------- history ---------- */
-function parsuj(txt, krok) {   // rows from before the last "new fermentation" are hidden
-  const od = cfg.reset_stat || 0;
+function parsuj(txt, krok, od = cfg.reset_stat || 0) {   // rows from before the last "new fermentation" are hidden
   // an empty value means the jar was paused or switched off: it is left out, not counted as 0
   return txt.split('\n').map(l => l.split(',').map(x => x.trim() === '' ? null : Number(x)))
     .filter(a => a.length >= 2 && Number.isFinite(a[0]) && a.every(v => v === null || Number.isFinite(v)) && a[0] + krok > od);
@@ -546,6 +647,7 @@ async function wczytajStatystyki() {
   const [m, h] = await Promise.all(['historia_min.csv', 'historia_godz.csv'].map(p =>
     fetch(p + '?t=' + Date.now(), {cache: 'no-store'}).then(r => r.ok ? r.text() : '').catch(() => '')));
   statDane = {min: parsuj(m, 60), godz: parsuj(h, 3600)}; rysujTabele();
+  if (ferm) rysujWykres();
 }
 g('bkZak').querySelectorAll('button').forEach(b => b.onclick = () => { zakres = b.dataset.z; zaznaczZakres(); wczytajHist(); });
 function zaznaczZakres() { g('bkZak').querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.z === zakres)); }
@@ -571,55 +673,191 @@ function koszyki() {
   }
   return {pkt, start, koniec: teraz};
 }
+
 function ladnyMax(v) { if (v <= 0) return 1; const p = Math.pow(10, Math.floor(Math.log10(v))); for (const m of [1, 2, 2.5, 5, 10]) if (m * p >= v) return m * p; return 10 * p; }
-function rysujLegende() { g('bkLeg').innerHTML = cfg.gasiory.map((gs, i) => `<span><i style="background:${KOLORY[i]}"></i>${esc(nazwa(i))}</span>`).join(''); }
+
+/* ---------- notes ---------- */
+const NOTA_KOL = '#f59e0b';
+const notatkiTeraz = () => (Array.isArray(cfg.notatki) ? cfg.notatki : []).filter(n => n.t >= (cfg.reset_stat || 0) - 60).sort((a, b) => a.t - b.t);
+function lokalnyCzas(ts) { const d = new Date(ts * 1000), p = n => String(n).padStart(2, '0'); return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`; }
+let czasRuszany = false;
+g('bkNotT').value = lokalnyCzas(Date.now() / 1000);
+g('bkNotT').oninput = () => czasRuszany = true;
+g('bkNotTxt').onfocus = () => { if (!czasRuszany) g('bkNotT').value = lokalnyCzas(Date.now() / 1000); };
+g('bkNotForm').onsubmit = async e => {
+  e.preventDefault();
+  const tekst = g('bkNotTxt').value.trim().slice(0, 100); if (!tekst) { g('bkNotTxt').focus(); return; }
+  const ts = g('bkNotT').value ? new Date(g('bkNotT').value).getTime() / 1000 : Date.now() / 1000;
+  const n = {id: Math.random().toString(36).slice(2, 10), t: Math.min(ts, Date.now() / 1000), tekst};
+  const ok = await zmien(c => {
+    const rs = c.reset_stat || 0, archiwalne = Date.now() / 1000 - rs > 120;   // older notes are already in the archive
+    c.notatki = (Array.isArray(c.notatki) ? c.notatki : []).filter(x => !archiwalne || x.t >= rs - 60);
+    c.notatki.push({...n}); c.notatki.sort((a, b) => a.t - b.t); c.notatki = c.notatki.slice(-40);
+  });
+  if (ok) { g('bkNotTxt').value = ''; czasRuszany = false; g('bkNotT').value = lokalnyCzas(Date.now() / 1000); }
+};
+function rysujNotatki() {
+  const l = g('bkNotLista'), a = ferm && archiwa.find(x => x.stamp === ferm);
+  g('bkNotForm').hidden = !!a;
+  const lista = a ? (a.info.notatki || []) : notatkiTeraz();
+  l.innerHTML = lista.length ? lista.slice().reverse().map(n => `<li><i>✎</i><span class="mut">${dataGodz(n.t)}</span><span class="tx">${esc(n.tekst)}</span>` +
+    (a ? '' : `<button data-id="${esc(n.id)}" title="${esc(t('noteDel'))}" aria-label="${esc(t('noteDel'))}">✕</button>`) + '</li>').join('')
+    : (a ? '' : `<li class="mut">${t('noNotes')}</li>`);
+  l.querySelectorAll('button[data-id]').forEach(b => b.onclick = () => {
+    if (!confirm(t('noteDelQ'))) return;
+    const id = b.dataset.id; zmien(c => c.notatki = (Array.isArray(c.notatki) ? c.notatki : []).filter(x => x.id !== id));
+  });
+}
+
+/* ---------- archive: earlier fermentations, compared with the current one ---------- */
+let ferm = '', archiwa = [];
+const archDane = {};
+const dzien = ts => new Date(ts * 1000).toLocaleDateString(LOC, {day: '2-digit', month: '2-digit'});
+const dlugosc = s => t('days', {d: Math.floor(s / 86400), h: Math.floor(s % 86400 / 3600)});
+async function wczytajArchiwa() {
+  try {
+    const r = await fetch('archiwum/?t=' + Date.now(), {cache: 'no-store'});
+    if (!r.ok) throw 0;
+    const stemple = (await r.json()).map(f => /^fermentacja-([\w-]+)\.json$/.exec(f.name || '')).filter(Boolean).map(m => m[1]);
+    const nowe = [];
+    for (const st of stemple) {
+      const z = archiwa.find(a => a.stamp === st); if (z) { nowe.push(z); continue; }
+      try { const q = await fetch(`archiwum/fermentacja-${st}.json`, {cache: 'no-store'}); if (q.ok) nowe.push({stamp: st, info: await q.json()}); } catch (e) {}
+    }
+    archiwa = nowe.sort((a, b) => (b.info.do || 0) - (a.info.do || 0));
+  } catch (e) { archiwa = []; }
+  const sel = g('bkFerm');
+  sel.hidden = !archiwa.length;
+  sel.innerHTML = `<option value="">${esc(t('fermNow'))}</option>` + archiwa.map(a =>
+    `<option value="${esc(a.stamp)}">${esc(t('fermArch', {od: dzien(a.info.od), do: dzien(a.info.do), d: dlugosc(a.info.do - a.info.od)}))}</option>`).join('');
+  if (!archiwa.some(a => a.stamp === ferm)) ferm = '';
+  sel.value = ferm;
+  pokazTrybHistorii();
+}
+g('bkFerm').onchange = async () => {
+  ferm = g('bkFerm').value; pokazTrybHistorii(); rysujWykres();
+  if (ferm && !archDane[ferm]) {
+    try { const r = await fetch(`archiwum/historia_godz-${ferm}.csv`, {cache: 'no-store'}); archDane[ferm] = r.ok ? parsuj(await r.text(), 3600, 0) : []; }
+    catch (e) { archDane[ferm] = []; }
+    rysujWykres();
+  }
+};
+function pokazTrybHistorii() {
+  const a = ferm && archiwa.find(x => x.stamp === ferm);
+  g('bkZak').hidden = !!a; g('bkCsv').hidden = !!a; g('bkArchInfo').hidden = !a;
+  if (a) {
+    const i = a.info, nazwy = Array.isArray(i.nazwy) ? i.nazwy : [];
+    g('bkArchInfo').innerHTML = esc(t('archSum', {od: dataGodz(i.od), do: dataGodz(i.do), czas: dlugosc(i.do - i.od)})) + ' ' +
+      (Array.isArray(i.lacznie) ? i.lacznie : []).map((n, k) => t('archTotal', {name: esc(nazwy[k] || t('jar', {n: k + 1})), n: liczba(n, 0)})).join(' · ') +
+      ` <br>${esc(t('archCsv'))} <a href="archiwum/historia_godz-${esc(a.stamp)}.csv">${esc(t('csvHour'))}</a> · <a href="archiwum/historia_min-${esc(a.stamp)}.csv">${esc(t('csvMin'))}</a>`;
+  }
+  rysujNotatki();
+}
+
+/* ---------- history chart: the current fermentation over time, or two fermentations by day ---------- */
+function modelBiezacy() {
+  const d = koszyki(); if (!d) return null;
+  return {xmin: d.start, xmax: d.koniec, czasowa: true,
+    serie: cfg.gasiory.map((gs, i) => ({kolor: KOLORY[i], dash: false, nazwa: nazwa(i), pkt: d.pkt.map(p => ({x: p.t, v: p.v[i]}))})),
+    notatki: notatkiTeraz().filter(n => n.t >= d.start && n.t <= d.koniec).map(n => ({x: n.t, t: n.t, tekst: n.tekst}))};
+}
+function modelPorownania(a) {
+  const dane = archDane[a.stamp]; if (!dane) return {wczytuje: true};
+  const startA = a.info.od || (dane[0] ? dane[0][0] : 0);
+  const startB = cfg.reset_stat || (statDane.godz[0] ? statDane.godz[0][0] : Date.now() / 1000);
+  const pkt = (w, start, i) => w.filter(r => r[i + 1] != null).map(r => ({x: (r[0] + 1800 - start) / 86400, v: r[i + 1] / 60}));
+  const nazwyA = Array.isArray(a.info.nazwy) ? a.info.nazwy : [], serie = [];
+  for (let i = 0; i < N; i++) {
+    serie.push({kolor: KOLORY[i], dash: true, nazwa: `${nazwyA[i] || nazwa(i)} (${dzien(a.info.od)})`, pkt: pkt(dane, startA, i)});
+    serie.push({kolor: KOLORY[i], dash: false, nazwa: `${nazwa(i)} (${t('nowShort')})`, pkt: pkt(statDane.godz, startB, i)});
+  }
+  const xmax = Math.max(1, ...serie.flatMap(s => s.pkt.map(p => p.x)));
+  const notatki = [...(a.info.notatki || []).map(n => ({x: (n.t - startA) / 86400, t: n.t, tekst: `${t('archNote')} ${n.tekst}`})),
+                   ...notatkiTeraz().map(n => ({x: (n.t - startB) / 86400, t: n.t, tekst: n.tekst}))];
+  return {xmin: 0, xmax: xmax * 1.02, czasowa: false, przerwa: 1.6 / 24, serie, notatki};
+}
+function rysujLegende(m) {
+  const serie = m && m.serie ? m.serie : cfg.gasiory.map((gs, i) => ({kolor: KOLORY[i], nazwa: nazwa(i)}));
+  g('bkLeg').innerHTML = serie.map(s => `<span><i style="background:${s.dash ? `repeating-linear-gradient(90deg,${s.kolor} 0 5px,transparent 5px 8px)` : s.kolor}"></i>${esc(s.nazwa)}</span>`).join('') +
+    (m && m.czasowa === false ? `<small class="mut">${esc(t('dayAxTitle'))}</small>` : '');
+}
 function rysujWykres() {
-  rysujLegende();
+  const a = ferm && archiwa.find(x => x.stamp === ferm);
+  const m = a ? modelPorownania(a) : modelBiezacy();
+  rysujLegende(m);
   const cv = g('bkCanvas'), [c, w, h] = przygotuj(cv);
   const mut = '#94a3b8', line = '#334155', txt = '#e2e8f0';
-  const d = koszyki(); punkty = null;
+  punkty = null;
   c.font = '12px system-ui,sans-serif';
-  if (!d || !d.pkt.some(p => p.v.some(v => v != null))) { c.fillStyle = mut; c.textAlign = 'left'; c.textBaseline = 'middle'; c.fillText(t('empty'), 12, h / 2); return; }
-  const L = 44, R = 84, T = 10, B = 24, pw = w - L - R, ph = h - T - B;
-  const ymax = ladnyMax(Math.max(...d.pkt.flatMap(p => p.v.filter(v => v != null))) * 1.1);
-  const X = x => L + (x - d.start) / (d.koniec - d.start) * pw, Y = v => T + ph - v / ymax * ph;
+  if (!m || m.wczytuje || !m.serie.some(s => s.pkt.some(p => p.v != null))) {
+    c.fillStyle = mut; c.textAlign = 'left'; c.textBaseline = 'middle'; c.fillText(m && m.wczytuje ? t('archLoad') : t('empty'), 12, h / 2); return;
+  }
+  const L = 44, R = 84, T = 14, B = 24, pw = w - L - R, ph = h - T - B;
+  const ymax = ladnyMax(Math.max(...m.serie.flatMap(s => s.pkt.filter(p => p.v != null).map(p => p.v))) * 1.1);
+  const X = x => L + (x - m.xmin) / (m.xmax - m.xmin) * pw, Y = v => T + ph - v / ymax * ph;
   c.strokeStyle = line; c.lineWidth = 1; c.fillStyle = mut; c.textAlign = 'right'; c.textBaseline = 'middle';
   for (let k = 0; k <= 4; k++) { const v = ymax * k / 4, y = Math.round(Y(v)) + .5; c.beginPath(); c.moveTo(L, y); c.lineTo(L + pw, y); c.stroke(); c.fillText(liczba(v, 1), L - 6, y); }
   c.textAlign = 'center'; c.textBaseline = 'top';
-  const zakresS = d.koniec - d.start, nEt = Math.max(2, Math.floor(pw / 90));
-  for (let k = 0; k <= nEt; k++) {
-    const x = d.start + zakresS * k / nEt, dt = new Date(x * 1000);
-    c.fillText(zakresS > 2.5 * 86400 ? dt.toLocaleDateString(LOC, {day: '2-digit', month: '2-digit'}) : dt.toLocaleTimeString(LOC, {hour: '2-digit', minute: '2-digit'}), X(x), T + ph + 6);
+  if (m.czasowa) {
+    const zakresS = m.xmax - m.xmin, nEt = Math.max(2, Math.floor(pw / 90));
+    for (let k = 0; k <= nEt; k++) {
+      const x = m.xmin + zakresS * k / nEt, dt = new Date(x * 1000);
+      c.fillText(zakresS > 2.5 * 86400 ? dt.toLocaleDateString(LOC, {day: '2-digit', month: '2-digit'}) : dt.toLocaleTimeString(LOC, {hour: '2-digit', minute: '2-digit'}), X(x), T + ph + 6);
+    }
+  } else {
+    const krok = Math.max(1, Math.ceil((m.xmax - m.xmin) / Math.max(2, Math.floor(pw / 60))));
+    for (let k = 0; k <= m.xmax; k += krok) c.fillText(t('dayAx', {n: k}), X(k), T + ph + 6);
+  }
+  // notes: dashed amber line with a small flag
+  for (const n of m.notatki) {
+    if (n.x < m.xmin || n.x > m.xmax) continue;
+    const x = Math.round(X(n.x)) + .5;
+    c.strokeStyle = NOTA_KOL; c.lineWidth = 1; c.setLineDash([3, 3]); c.beginPath(); c.moveTo(x, T); c.lineTo(x, T + ph); c.stroke(); c.setLineDash([]);
+    c.fillStyle = NOTA_KOL; c.beginPath(); c.moveTo(x, T - 8); c.lineTo(x + 8, T - 4); c.lineTo(x, T); c.fill();
   }
   const konce = [];
-  for (let i = 0; i < N; i++) {
-    c.strokeStyle = KOLORY[i]; c.lineWidth = 2; c.lineJoin = 'round'; c.lineCap = 'round'; c.beginPath();
-    let ciag = false, ost = null;
-    for (const p of d.pkt) { const v = p.v[i]; if (v == null) { ciag = false; continue; } const x = X(p.t), y = Y(v); ciag ? c.lineTo(x, y) : c.moveTo(x, y); ciag = true; ost = {x, y, v, i}; }
-    c.stroke();
-    if (ost) konce.push(ost);
-  }
+  m.serie.forEach(s => {
+    c.strokeStyle = s.kolor; c.lineWidth = s.dash ? 1.5 : 2; c.setLineDash(s.dash ? [6, 4] : []); c.lineJoin = 'round'; c.lineCap = 'round'; c.beginPath();
+    let ost = null;
+    for (const p of s.pkt) {
+      if (p.v == null) { ost = null; continue; }
+      const x = X(p.x), y = Y(p.v);
+      (ost && !(m.przerwa && p.x - ost.px > m.przerwa)) ? c.lineTo(x, y) : c.moveTo(x, y);
+      ost = {x, y, v: p.v, px: p.x, kolor: s.kolor, dash: s.dash};
+    }
+    c.stroke(); c.setLineDash([]);
+    const koniec = [...s.pkt].reverse().find(p => p.v != null);
+    if (koniec && !s.dash) konce.push({x: X(koniec.x), y: Y(koniec.v), v: koniec.v, kolor: s.kolor});
+  });
   konce.sort((a, b) => a.y - b.y);   // direct labels at the line ends, spaced so they do not overlap
   let poprz = -1e9;
   for (const o of konce) {
     const ly = Math.min(T + ph, Math.max(T, Math.max(o.y, poprz + 14))); poprz = ly;
-    c.fillStyle = KOLORY[o.i]; c.beginPath(); c.arc(o.x, o.y, 4, 0, 7); c.fill();
+    c.fillStyle = o.kolor; c.beginPath(); c.arc(o.x, o.y, 4, 0, 7); c.fill();
     c.fillStyle = txt; c.textAlign = 'left'; c.textBaseline = 'middle'; c.fillText(`${liczba(o.v, 1)}/min`, o.x + 8, ly);
   }
-  punkty = {d, X, Y, L, pw, T, ph};
+  punkty = {m, X, Y, L, pw, T, ph};
 }
 const wyk = g('bkCanvas'), tip = g('bkTip');
 wyk.addEventListener('pointermove', e => {
-  if (!punkty) return; const r = wyk.getBoundingClientRect(), x = e.clientX - r.left;
+  if (!punkty) return; const r = wyk.getBoundingClientRect(), x = e.clientX - r.left, {m, X, Y} = punkty;
   if (x < punkty.L || x > punkty.L + punkty.pw) { tip.style.display = 'none'; rysujWykres(); return; }
-  let best = null; for (const p of punkty.d.pkt) { const dx = Math.abs(punkty.X(p.t) - x); if (!best || dx < best.dx) best = {dx, p}; }
-  rysujWykres(); const c = wyk.getContext('2d'), bx = punkty.X(best.p.t);
-  c.strokeStyle = '#94a3b8'; c.lineWidth = 1; c.beginPath(); c.moveTo(bx, punkty.T); c.lineTo(bx, punkty.T + punkty.ph); c.stroke();
-  best.p.v.forEach((v, i) => { if (v == null) return; c.fillStyle = KOLORY[i]; c.strokeStyle = '#1e293b'; c.lineWidth = 2; c.beginPath(); c.arc(bx, punkty.Y(v), 5, 0, 7); c.fill(); c.stroke(); });
-  tip.innerHTML = `<div class="mut" style="margin-bottom:4px">${dataGodz(best.p.t)}</div>` +
-    cfg.gasiory.map((gs, i) => `<div><i style="background:${KOLORY[i]}"></i>${esc(nazwa(i))}: <b>${best.p.v[i] == null ? t('none') : liczba(best.p.v[i], 1) + ' /min'}</b></div>`).join('');
+  const xv = m.xmin + (x - punkty.L) / punkty.pw * (m.xmax - m.xmin);
+  const tol = m.czasowa ? Math.max(8, punkty.pw / 240) : Math.max(8, punkty.pw / ((m.xmax - m.xmin) * 24) * 1.5);
+  const wiersze = m.serie.map(s => {
+    let best = null; for (const p of s.pkt) { if (p.v == null) continue; const dx = Math.abs(X(p.x) - x); if (!best || dx < best.dx) best = {dx, p}; }
+    return {s, p: best && best.dx <= tol ? best.p : null};
+  });
+  rysujWykres(); const c = wyk.getContext('2d');
+  c.strokeStyle = '#94a3b8'; c.lineWidth = 1; c.beginPath(); c.moveTo(x, punkty.T); c.lineTo(x, punkty.T + punkty.ph); c.stroke();
+  wiersze.forEach(({s, p}) => { if (!p) return; c.fillStyle = s.kolor; c.strokeStyle = '#1e293b'; c.lineWidth = 2; c.beginPath(); c.arc(X(p.x), Y(p.v), 5, 0, 7); c.fill(); c.stroke(); });
+  const noty = m.notatki.filter(n => Math.abs(X(n.x) - x) <= 6);
+  const naglowek = m.czasowa ? dataGodz(xv) : t('dayTip', {d: Math.floor(xv), h: Math.floor(xv % 1 * 24)});
+  tip.innerHTML = `<div class="mut" style="margin-bottom:4px">${naglowek}</div>` +
+    wiersze.map(({s, p}) => `<div><i style="background:${s.kolor}"></i>${esc(s.nazwa)}: <b>${p ? liczba(p.v, 1) + ' /min' : t('none')}</b></div>`).join('') +
+    noty.map(n => `<div style="color:${NOTA_KOL};margin-top:4px;white-space:normal;max-width:260px">✎ ${dataGodz(n.t)} · ${esc(n.tekst)}</div>`).join('');
   tip.style.display = 'block';
-  tip.style.left = (bx + 24 + tip.offsetWidth > r.width ? bx - tip.offsetWidth - 12 : bx + 24) + 'px'; tip.style.top = (e.clientY - r.top + 20) + 'px';
+  tip.style.left = (x + 24 + tip.offsetWidth > r.width ? x - tip.offsetWidth - 12 : x + 24) + 'px'; tip.style.top = (e.clientY - r.top + 20) + 'px';
 });
 wyk.addEventListener('pointerleave', () => { tip.style.display = 'none'; rysujWykres(); });
 
@@ -664,15 +902,17 @@ function rysujTabele() {
 }
 
 /* ---------- refresh loops ---------- */
-function wszystko() { odswiezObraz(); wczytajHist(); wczytajStatystyki(); odswiezStan(); }
+function wszystko() { odswiezObraz(); odswiezCfg(); wczytajHist(); wczytajStatystyki(); odswiezStan(); }
 document.addEventListener('visibilitychange', () => { if (!document.hidden) wszystko(); });
 setInterval(odswiezStan, 1000);
+setInterval(odswiezCfg, 5000);
+setInterval(() => { if (!document.hidden) wczytajArchiwa(); }, 10 * 60000);
 setInterval(odswiezObraz, 2000);
 setInterval(wiekObrazu, 1000);
 setInterval(() => { if (!document.hidden) { wczytajHist(); wczytajStatystyki(); } }, 60000);
 window.addEventListener('resize', rysujWykres);
 zaznaczZakres();
-wczytajCfg().then(wszystko);
+wczytajCfg().then(() => { wszystko(); wczytajArchiwa(); });
 })();
 </script>
 </body></html>

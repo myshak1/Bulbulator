@@ -20,7 +20,10 @@
 - Live camera image at the top of the page; the airlock frame flashes for every counted bubble
 - Mark the airlocks with the mouse directly on the camera image
 - **Pause** button for all airlocks (e.g. at night) and an **on/off** switch for each jar; paused time does not pull the charts and averages down
-- **New fermentation** button: all counters and the history start from zero, the old data is archived as CSV
+- **Automatic pause in the dark**: counting stops by itself when the airlocks are too dark and resumes when it gets light
+- **Notes on the history chart** (e.g. "added sugar", "racked") with markers and tooltips
+- **New fermentation** button: all counters and the history start from zero; earlier fermentations stay in an archive and can be **compared** with the current one day by day
+- Settings are shared by all open pages and never overwritten by an old copy
 - Polish and English interface (flags in the top-right corner)
 - Light on resources: ~15% of one core on a Raspberry Pi 4 / RK3399 board
 
@@ -100,7 +103,7 @@ The built-in server has **no login by default** — set `BULBULATOR_AUTH` or bin
 | `DATA/historia_min.csv` | `unix_time,count1,count2,…` per minute (last 48 h) |
 | `DATA/historia_godz.csv` | the same per hour (whole history) |
 | `DATA/liczniki.json` | total counters |
-| `DATA/historia_*-YYYYmmdd-HHMM.csv` | history archived by *New fermentation* |
+| `DATA/archiwum/` | earlier fermentations: `historia_min-STAMP.csv`, `historia_godz-STAMP.csv`, `fermentacja-STAMP.json` (start, end, names, totals, notes) |
 | `STATE/stan.json`, `STATE/snapshot.jpg` | live state and camera image for the page |
 
 File and JSON key names are Polish (*gąsior* = carboy, *bąbel* = bubble).

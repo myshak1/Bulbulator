@@ -20,7 +20,10 @@
 - Obraz z kamery na żywo na górze strony; ramka rurki miga przy każdym policzonym bąblu
 - Zaznaczanie rurek myszą bezpośrednio na obrazie z kamery
 - Przycisk **pauzy** dla wszystkich rurek (np. na noc) i **wyłącznik** każdego gąsiora; czas pauzy nie zaniża wykresów i średnich
-- Przycisk **Nowa fermentacja**: liczniki i historia zaczynają się od zera, stare dane zostają w archiwum CSV
+- **Automatyczna pauza po zmroku**: liczenie samo staje, gdy rurki są za ciemne, i wraca, gdy się rozjaśni
+- **Notatki na wykresie historii** (np. „dosypałem cukru”, „zlałem znad osadu”) ze znacznikami i podpowiedziami
+- Przycisk **Nowa fermentacja**: liczniki i historia zaczynają się od zera; wcześniejsze fermentacje zostają w archiwum i można je **porównać** z bieżącą dzień po dniu
+- Ustawienia są wspólne dla wszystkich otwartych stron i stara kopia ich nie nadpisze
 - Interfejs po polsku i po angielsku (flagi w prawym górnym rogu)
 - Małe obciążenie: ok. 15% jednego rdzenia na Raspberry Pi 4 i płytkach z RK3399
 
@@ -102,7 +105,7 @@ Wbudowany serwer **domyślnie nie ma logowania**. Jeśli sieć nie jest zaufana,
 | `DATA/historia_min.csv` | `czas_unix,liczba1,liczba2,…` co minutę (ostatnie 48 h) |
 | `DATA/historia_godz.csv` | to samo co godzinę (cała historia) |
 | `DATA/liczniki.json` | liczniki łączne |
-| `DATA/historia_*-RRRRmmdd-GGMM.csv` | historia zarchiwizowana przyciskiem *Nowa fermentacja* |
+| `DATA/archiwum/` | wcześniejsze fermentacje: `historia_min-STAMP.csv`, `historia_godz-STAMP.csv`, `fermentacja-STAMP.json` (początek, koniec, nazwy, sumy, notatki) |
 | `STATE/stan.json`, `STATE/snapshot.jpg` | stan na żywo i obraz z kamery dla strony |
 
 ## O projekcie

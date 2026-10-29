@@ -32,9 +32,17 @@ paused ('pauza') or an airlock is switched off ('wylaczony'), nothing is counted
 and the history gets an empty value instead of 0, so the charts and averages
 are not pulled down by the time the camera could not see anything.
 
+Automatic pause in the dark ('auto_ciemno'): when the marked airlock areas stay
+darker than 'jasnosc_min' (0-255) for 30 s, counting pauses by itself, and it
+resumes when they stay brighter for 30 s.
+
+Notes ('notatki' in config.json, written by the page) are shown on the history
+chart, e.g. "added sugar" or "racked".
+
 "New fermentation" on the page sets reset_stat in config.json: the counters of
-all airlocks go to zero and the history files are moved aside as
-historia_min-YYYYmmdd-HHMM.csv / historia_godz-YYYYmmdd-HHMM.csv.
+all airlocks go to zero and the history moves to DATA/archiwum/:
+historia_min-STAMP.csv, historia_godz-STAMP.csv and fermentacja-STAMP.json
+(start, end, jar names, totals and notes), which the page lists for comparison.
 
 Optional built-in web server (BULBULATOR_HTTP=0.0.0.0:8088) serves the page
 and the files above, so nginx is not required.  JSON keys and file names are
@@ -45,6 +53,7 @@ import collections
 import http.server
 import json
 import os
+import re
 import sys
 import threading
 import time
@@ -53,7 +62,7 @@ import urllib.request
 import cv2
 import numpy as np
 
-VERSION = '1.4'
+VERSION = '1.5'
 HERE = os.path.dirname(os.path.abspath(__file__))
 
 STREAM = os.environ.get('BULBULATOR_STREAM', 'http://127.0.0.1:8090/stream')
@@ -69,6 +78,7 @@ CONFIG = os.path.join(DATA, 'config.json')
 LICZNIKI = os.path.join(DATA, 'liczniki.json')
 HIST_MIN = os.path.join(DATA, 'historia_min.csv')
 HIST_GODZ = os.path.join(DATA, 'historia_godz.csv')
+ARCHIWUM = os.path.join(DATA, 'archiwum')
 STAN = os.path.join(STATE, 'stan.json')
 SNAPSHOT = os.path.join(STATE, 'snapshot.jpg')
 SKALA = 2          # frames are analysed at half resolution (much faster)
@@ -81,7 +91,12 @@ DOMYSLNA = {
     'obrot': False,       # page only: show the camera image rotated by 180 degrees
     'reset_stat': 0,      # time of the last "new fermentation" (all counters and history)
     'pauza': False,       # counting paused for all airlocks (e.g. at night)
+    'auto_ciemno': False,  # pause by itself when the airlock areas are too dark
+    'jasnosc_min': 20.0,  # brightness (0-255) below which it is "too dark"
+    'notatki': [],        # [{'id', 't', 'tekst'}] notes shown on the history chart
 }
+NOTATKI_MAX, NOTATKA_DL = 40, 100
+CIEMNO_S = 30             # seconds of darkness / light before the automatic pause switches
 
 
 PROG_MIN, PROG_MAX = 0.05, 50.0   # allowed fixed threshold range (signal units)
@@ -120,6 +135,14 @@ def normalizuj_cfg(c):
     cfg['obrot'] = bool(c.get('obrot', False))
     cfg['reset_stat'] = liczba_lub(c.get('reset_stat'), 0.0)
     cfg['pauza'] = c.get('pauza') is True
+    cfg['auto_ciemno'] = c.get('auto_ciemno') is True
+    cfg['jasnosc_min'] = min(max(liczba_lub(c.get('jasnosc_min'), 20.0), 1.0), 250.0)
+    notatki = []
+    for n in c.get('notatki') if isinstance(c.get('notatki'), list) else []:
+        if isinstance(n, dict) and liczba_lub(n.get('t'), None) is not None and str(n.get('tekst') or '').strip():
+            notatki.append({'id': str(n.get('id') or '')[:20], 't': float(n['t']),
+                            'tekst': str(n['tekst']).strip()[:NOTATKA_DL]})
+    cfg['notatki'] = sorted(notatki, key=lambda n: n['t'])[-NOTATKI_MAX:]
     zrodlo = c.get('gasiory') if isinstance(c.get('gasiory'), list) else []
     for i in range(N):
         g = zrodlo[i] if i < len(zrodlo) and isinstance(zrodlo[i], dict) else {}
@@ -275,17 +298,68 @@ def przytnij_minuty(teraz):
         log('history trim:', e)
 
 
-def archiwizuj_historie(t):
-    """New fermentation: move the history files aside, the page starts with empty charts."""
+def suma_kolumn(sciezka):
+    """First time stamp and per-jar totals of a history file."""
+    pierwszy, sumy = None, [0] * N
+    try:
+        with open(sciezka, errors='replace') as f:
+            for l in f:
+                pola = l.replace('\0', '').strip().split(',')
+                tl = czas_linii(pola[0]) if pola[0] else None
+                if tl is None:
+                    continue
+                pierwszy = tl if pierwszy is None else min(pierwszy, tl)
+                for i, v in enumerate(pola[1:N + 1]):
+                    try:
+                        sumy[i] += int(float(v))
+                    except ValueError:
+                        pass
+    except OSError:
+        pass
+    return pierwszy, sumy
+
+
+def archiwizuj_historie(t, od, nazwy, lacznie, notatki):
+    """New fermentation: move the history to DATA/archiwum/ with a short description."""
+    os.makedirs(ARCHIWUM, exist_ok=True)
     znacznik = time.strftime('%Y%m%d-%H%M', time.localtime(t))
+    k = 2
+    while os.path.exists(os.path.join(ARCHIWUM, f'fermentacja-{znacznik}.json')):
+        znacznik = time.strftime('%Y%m%d-%H%M', time.localtime(t)) + f'-{k}'
+        k += 1
+    pierwszy, _ = suma_kolumn(HIST_GODZ)
     for sciezka in (HIST_MIN, HIST_GODZ):
         if os.path.exists(sciezka):
-            cel = sciezka[:-4] + '-' + znacznik + '.csv'
+            cel = os.path.join(ARCHIWUM, os.path.basename(sciezka)[:-4] + '-' + znacznik + '.csv')
             try:
                 os.replace(sciezka, cel)
-                log('history archived:', cel)
             except OSError as e:
                 log('history archive:', e)
+    start = od or pierwszy or t
+    zapisz_json(os.path.join(ARCHIWUM, f'fermentacja-{znacznik}.json'), {
+        'od': start, 'do': t, 'nazwy': nazwy, 'lacznie': lacznie,
+        'notatki': [n for n in notatki if start - 60 <= n['t'] <= t]})
+    log('history archived:', os.path.join(ARCHIWUM, f'*-{znacznik}.*'))
+
+
+def przenies_stare_archiwa(nazwy):
+    """Archives made by version 1.2-1.4 (historia_*-STAMP.csv next to the data) -> DATA/archiwum/."""
+    for plik in sorted(os.listdir(DATA)):
+        m = re.fullmatch(r'historia_(min|godz)-([\w-]+)\.csv', plik)
+        if not m:
+            continue
+        os.makedirs(ARCHIWUM, exist_ok=True)
+        os.replace(os.path.join(DATA, plik), os.path.join(ARCHIWUM, plik))
+        opis = os.path.join(ARCHIWUM, f'fermentacja-{m.group(2)}.json')
+        godz = os.path.join(ARCHIWUM, f'historia_godz-{m.group(2)}.csv')
+        if m.group(1) == 'godz' and not os.path.exists(opis):
+            try:
+                koniec = time.mktime(time.strptime(m.group(2)[:13], '%Y%m%d-%H%M'))
+            except ValueError:
+                koniec = os.path.getmtime(godz)
+            pierwszy, sumy = suma_kolumn(godz)
+            zapisz_json(opis, {'od': pierwszy or koniec, 'do': koniec, 'nazwy': nazwy, 'lacznie': sumy, 'notatki': []})
+        log('old archive moved:', plik)
 
 
 def zapisz_prog(i, prog):
@@ -348,6 +422,8 @@ class Serwer(http.server.BaseHTTPRequestHandler):
         if not self.autoryzacja():
             return
         sciezka = self.path.split('?', 1)[0]
+        if sciezka.startswith('/archiwum/'):
+            return self.archiwum(sciezka[len('/archiwum/'):])
         if sciezka not in PLIKI:
             return self.odpowiedz(404, tresc=b'not found')
         plik, typ = PLIKI[sciezka]
@@ -355,6 +431,25 @@ class Serwer(http.server.BaseHTTPRequestHandler):
             with open(plik, 'rb') as f:
                 self.odpowiedz(200, typ, f.read())
         except FileNotFoundError:
+            self.odpowiedz(404, tresc=b'not found')
+
+    def archiwum(self, nazwa):
+        """Same as nginx 'autoindex_format json' for the listing, plus the archived files."""
+        if nazwa == '':
+            lista = []
+            if os.path.isdir(ARCHIWUM):
+                for p in sorted(os.listdir(ARCHIWUM)):
+                    st = os.stat(os.path.join(ARCHIWUM, p))
+                    lista.append({'name': p, 'type': 'file', 'size': st.st_size,
+                                  'mtime': time.strftime('%a, %d %b %Y %H:%M:%S GMT', time.gmtime(st.st_mtime))})
+            return self.odpowiedz(200, 'application/json', json.dumps(lista).encode())
+        if not re.fullmatch(r'[\w-]+\.(csv|json)', nazwa):
+            return self.odpowiedz(404, tresc=b'not found')
+        try:
+            with open(os.path.join(ARCHIWUM, nazwa), 'rb') as f:
+                typ = 'application/json' if nazwa.endswith('.json') else 'text/csv; charset=utf-8'
+                self.odpowiedz(200, typ, f.read())
+        except OSError:
             self.odpowiedz(404, tresc=b'not found')
 
     do_HEAD = do_GET
@@ -396,6 +491,10 @@ def main():
         uruchom_serwer()
     cfg = normalizuj_cfg(wczytaj_json(CONFIG, DOMYSLNA))
     cfg_mtime = os.path.getmtime(CONFIG)
+    try:
+        przenies_stare_archiwa([g['nazwa'] for g in cfg['gasiory']])
+    except OSError as e:
+        log('old archives:', e)
 
     def lista(klucz, domyslna):
         v = licz.get(klucz) if isinstance(licz.get(klucz), list) else []
@@ -415,6 +514,10 @@ def main():
     liczyl_min = [False] * N       # was the airlock counting at any time in this minute / hour
     liczyl_godz = [False] * N
     liczy_poprz = None
+    jasnosc = None                 # mean brightness of the airlock areas (0-255), smoothed
+    jasnosc_t = 0.0
+    ciemno = False                 # automatic pause is on because it is too dark
+    ciemno_zmiana = None           # since when the brightness says the opposite of 'ciemno'
     prev_full = None
     ost_analiza = ost_stan = ost_cfg = ost_licz = ost_foto = 0.0
     klatek = 0
@@ -439,8 +542,17 @@ def main():
             except OSError:
                 pass
             if cfg['reset_stat'] > reset_stat_znany:          # "new fermentation" on the page
+                # finish the current minute and hour first, so the archive is complete
+                if any(liczyl_min):
+                    dopisz(HIST_MIN, ','.join([str(minuta)] + [str(v) if k else '' for v, k in zip(w_minucie, liczyl_min)]))
+                if any(liczyl_godz):
+                    dopisz(HIST_GODZ, ','.join([str(godzina)] + [str(v) if k else '' for v, k in zip(w_godzinie, liczyl_godz)]))
+                try:
+                    archiwizuj_historie(t, reset_stat_znany or min(od), [g['nazwa'] for g in cfg['gasiory']],
+                                        list(lacznie), cfg['notatki'])
+                except OSError as e:
+                    log('history archive:', e)
                 reset_stat_znany = cfg['reset_stat']
-                archiwizuj_historie(t)
                 for i in range(N):
                     lacznie[i] = 0
                     od[i] = t
@@ -486,9 +598,30 @@ def main():
         prev_full = img
         hh, ww = img.shape[:2]
 
-        liczy = [bool(g['roi']) and not g['wylaczony'] and not cfg['pauza'] for g in cfg['gasiory']]
+        # brightness of the marked airlocks (whole picture when none is marked) for the automatic pause
+        jasne = [img[int(r[1] / SKALA):int((r[1] + r[3]) / SKALA), int(r[0] / SKALA):int((r[0] + r[2]) / SKALA)]
+                 for r in (g['roi'] for g in cfg['gasiory'] if g['roi'] and not g['wylaczony'])]
+        jasne = [w.mean() for w in jasne if w.size]
+        teraz_j = float(np.mean(jasne)) if jasne else float(img.mean())
+        # smoothed over ~5 s, so a single bright or dark frame does not restart the 30 s count
+        jasnosc = teraz_j if jasnosc is None else jasnosc + min(1.0, (t - jasnosc_t) / 5) * (teraz_j - jasnosc)
+        jasnosc_t = t
+        if not cfg['auto_ciemno']:
+            ciemno, ciemno_zmiana = False, None
+        else:
+            przeciwnie = jasnosc > cfg['jasnosc_min'] + 3 if ciemno else jasnosc < cfg['jasnosc_min']
+            if not przeciwnie:
+                ciemno_zmiana = None
+            elif ciemno_zmiana is None:
+                ciemno_zmiana = t
+            elif t - ciemno_zmiana >= CIEMNO_S:
+                ciemno, ciemno_zmiana = not ciemno, None
+                log(f'too dark ({jasnosc:.0f} < {cfg["jasnosc_min"]:.0f}): counting paused' if ciemno
+                    else f'light again ({jasnosc:.0f}): counting resumed')
+
+        liczy = [bool(g['roi']) and not g['wylaczony'] and not cfg['pauza'] and not ciemno for g in cfg['gasiory']]
         if liczy != liczy_poprz:
-            if liczy_poprz is not None:
+            if liczy_poprz is not None and not ciemno:
                 log('counting:', 'PAUSED' if cfg['pauza'] else
                     ', '.join(f'airlock {i + 1} ' + ('on' if v else 'off') for i, v in enumerate(liczy)))
             liczy_poprz = liczy
@@ -560,7 +693,8 @@ def main():
                 })
             zapisz_json(STAN, {'wersja': VERSION, 't': t, 'start': start, 'fps': round(fps, 1),
                                'przerwa_min': cfg['przerwa_min'], 'reset_stat': reset_stat_znany,
-                               'pauza': cfg['pauza'],
+                               'pauza': cfg['pauza'], 'ciemno': ciemno, 'auto_ciemno': cfg['auto_ciemno'],
+                               'jasnosc': round(jasnosc, 1),
                                'gasiory': gas})
 
         # totals to disk once a minute (spares SD/eMMC)
