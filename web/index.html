@@ -50,6 +50,14 @@ section.sek{margin-top:14px}
 .bk-obraz{position:relative;width:100%;touch-action:none;user-select:none;border-radius:8px;overflow:hidden;background:#000;aspect-ratio:16/9}
 .bk-obraz img{width:100%;height:100%;object-fit:contain;display:block;-webkit-user-drag:none}
 .bk-obrazwrap{position:relative}
+.bk-obrazwrap:fullscreen{background:#000;display:flex;align-items:center;justify-content:center}
+.bk-obrazwrap:fullscreen .bk-obraz{width:min(100vw,calc(100vh * var(--ar,1.7778)));border-radius:0;aspect-ratio:auto}
+.bk-obrazwrap:fullscreen .bk-ramka span{font-size:16px;padding:2px 8px}
+.bk-obrazwrap:fullscreen .bk-pauza{border-radius:0}
+.pe-zamknij{display:none;position:absolute;top:12px;right:12px;z-index:4;background:#0b1220cc;color:#fff;border:1px solid #fff4;border-radius:8px;padding:6px 12px;font:inherit;font-size:14px;cursor:pointer}
+.bk-obrazwrap:fullscreen .pe-zamknij{display:block}
+.bk-karta.wst .bk-gl,.bk-karta.wst .bk-sia,.bk-karta.wst .bk-syg{opacity:.5}
+.bk-nag button.ikona{width:30px;padding:4px 0}
 .bk-pauza{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;border-radius:8px;background:#0f172a99}
 .bk-pauza span{background:#f59e0b;color:#0b1220;font-weight:700;padding:6px 16px;border-radius:99px;font-size:15px}
 .bk-ramka.wyl{border-style:dashed;opacity:.45}
@@ -133,6 +141,7 @@ footer{max-width:1440px;margin:0 auto;padding:0 16px 24px;font-size:12px;color:v
   <span class="mut" style="font-size:13px" data-t="sub"></span>
   <span class="pill" id="bkLive"><i></i><span id="bkLiveT" data-t="connecting"></span></span>
   <span class="sp"></span>
+  <button class="b mini obrys" id="bkPePelny" hidden></button>
   <div class="flagi" role="group" aria-label="Language">
     <button type="button" data-lang="pl" title="Polski" aria-label="Polski"><svg viewBox="0 0 16 10"><rect width="16" height="5" fill="#fff"/><rect y="5" width="16" height="5" fill="#dc143c"/></svg></button>
     <button type="button" data-lang="en" title="English" aria-label="English"><svg viewBox="0 0 60 30"><clipPath id="uk1"><path d="M0,0v30h60V0z"/></clipPath><clipPath id="uk2"><path d="M30,15h30v15zv15H0zH0V0zV0h30z"/></clipPath><g clip-path="url(#uk1)"><path d="M0,0v30h60V0z" fill="#012169"/><path d="M0,0 60,30M60,0 0,30" stroke="#fff" stroke-width="6"/><path d="M0,0 60,30M60,0 0,30" clip-path="url(#uk2)" stroke="#C8102E" stroke-width="4"/><path d="M30,0v30M0,15h60" stroke="#fff" stroke-width="10"/><path d="M30,0v30M0,15h60" stroke="#C8102E" stroke-width="6"/></g></svg></button>
@@ -147,10 +156,12 @@ footer{max-width:1440px;margin:0 auto;padding:0 16px 24px;font-size:12px;color:v
       <span class="sp"></span>
       <button class="b mini" id="bkPauza"></button>
       <button class="b mini obrys" id="bkObrBtn" data-t="rotateBtn"></button>
+      <button class="b mini obrys" id="bkPeKam" hidden data-t="fsCam"></button>
     </div>
     <div class="bk-obrazwrap">
       <div class="bk-obraz" id="bkObraz"><img id="bkImg" alt=""><div class="brak" id="bkBrak" data-t="noImage"></div></div>
       <div class="bk-pauza" id="bkPauzaInfo" hidden><span id="bkPauzaTxt"></span></div>
+      <button class="pe-zamknij" id="bkPeZamknij" data-t="fsClose"></button>
     </div>
     <p class="bk-podp mut" id="bkPodp" data-t="areasHint"></p>
   </section>
@@ -223,8 +234,10 @@ const TXT = {
     sub: 'licznik bąbli fermentacji', connecting: 'łączenie…', live: 'na żywo · {fps} kl./s', offline: 'brak danych z licznika',
     camera: 'Kamera', imgAge: 'obraz sprzed {n} s', noImage: 'Czekam na obraz z kamery…', rotateBtn: '↻ Obróć 180°',
     pause: '⏸ Wstrzymaj liczenie', resume: '▶ Wznów liczenie', pausedBanner: '⏸ Liczenie wstrzymane', pausedPill: 'pauza · nic nie liczy',
-    off: 'Wyłącz', on: 'Włącz', offT: 'Wyłącz liczenie tego gąsiora (np. pusty gąsior). Obszar rurki i próg zostają zapisane.', onT: 'Włącz z powrotem liczenie tego gąsiora',
-    stOff: '○ wyłączony', stPaused: '⏸ pauza', stDark: '🌙 za ciemno', darkBanner: '🌙 Za ciemno · liczenie wstrzymane', darkPill: 'za ciemno · nic nie liczy',
+    off: 'Wyłącz', on: 'Włącz', offT: 'Wyłącz gąsior na dłużej (np. pusty). Obszar rurki i próg zostają zapisane.', onT: 'Włącz z powrotem liczenie tego gąsiora',
+    stOff: '○ wyłączony', stPaused: '⏸ pauza', stHeld: '⏸ wstrzymany',
+    hold: '⏸', holdT: 'Wstrzymaj liczenie tego gąsiora na chwilę (np. przy dolewaniu albo przestawianiu)', unhold: '▶', unholdT: 'Wznów liczenie tego gąsiora',
+    fsCam: '⛶ Pełny ekran', fsPage: '⛶ Pełny ekran', fsPageOff: '✕ Zamknij pełny ekran', fsClose: '✕ Zamknij (Esc)', fsCamT: 'Obraz z kamery na cały ekran (albo kliknij dwa razy w obraz)', stDark: '🌙 za ciemno', darkBanner: '🌙 Za ciemno · liczenie wstrzymane', darkPill: 'za ciemno · nic nie liczy',
     autoDark: '🌙 Automatyczna pauza, gdy jest za ciemno', darkLevel: 'Próg jasności:', darkNow: 'teraz {v}',
     autoDarkHint: 'Liczenie wstrzymuje się samo, gdy obszary rurek są ciemniejsze niż próg przez 30 s, i wraca, gdy są jaśniejsze przez 30 s. Ustaw próg trochę poniżej jasności wieczorem, gdy kamera jeszcze dobrze widzi.',
     fermNow: 'Bieżąca fermentacja', fermArch: 'Porównaj z: {od} – {do} ({d})', nowShort: 'teraz',
@@ -242,7 +255,7 @@ const TXT = {
     areasSmall: 'Za mały prostokąt, spróbuj ponownie.', imgAlt: 'Obraz z kamery z zaznaczonymi rurkami',
     settings: 'Ustawienia', minGap: 'Min. odstęp między bąblami:',
     save: 'Zapisz', saved: 'Zapisano ✓', saveFail: 'Nie udało się zapisać ustawień ({e}).',
-    tips: 'Wskazówki: kamera i gąsiory nieruchomo, stałe światło (lampka LED), ciemne tło za rurką i prostokąt obejmujący tylko rurkę z wodą. Ramka na obrazie mignie przy każdym policzonym bąblu. Wykres na karcie pokazuje sygnał (linia) i próg (przerywana). Próg jest stały, program nigdy go sam nie zmienia. Bąbel liczy się, gdy sygnał przetnie linię progu w górę. Ustaw próg nad szumem, a pod szczytami bąbli: kliknij albo przeciągnij na wykresie, użyj suwaka lub przycisków −/+. Bąble giną: obniż próg. Liczy za dużo: podnieś. Gdy robi się ciemno, wciśnij „Wstrzymaj liczenie” albo włącz automatyczną pauzę w ustawieniach; pusty gąsior wyłącz przyciskiem „Wyłącz” na jego karcie. Czas pauzy nie zaniża wykresów ani średnich. Ustawienia zapisują się od razu i są wspólne dla wszystkich otwartych stron.',
+    tips: 'Wskazówki: kamera i gąsiory nieruchomo, stałe światło (lampka LED), ciemne tło za rurką i prostokąt obejmujący tylko rurkę z wodą. Ramka na obrazie mignie przy każdym policzonym bąblu. Wykres na karcie pokazuje sygnał (linia) i próg (przerywana). Próg jest stały, program nigdy go sam nie zmienia. Bąbel liczy się, gdy sygnał przetnie linię progu w górę. Ustaw próg nad szumem, a pod szczytami bąbli: kliknij albo przeciągnij na wykresie, użyj suwaka lub przycisków −/+. Bąble giną: obniż próg. Liczy za dużo: podnieś. Gdy robi się ciemno, wciśnij „Wstrzymaj liczenie” albo włącz automatyczną pauzę w ustawieniach. Jeden gąsior wstrzymasz na chwilę przyciskiem ⏸ na jego karcie (np. przy dolewaniu), a pusty wyłączysz przyciskiem „Wyłącz”. Obraz z kamery na cały ekran: przycisk „⛶ Pełny ekran” albo dwa kliknięcia w obraz. Czas pauzy nie zaniża wykresów ani średnich. Ustawienia zapisują się od razu i są wspólne dla wszystkich otwartych stron.',
     license: 'licencja MIT',
     jar: 'Gąsior {n}', bps: 'bąbli/s', avg10: '(średnio z 10 s)', perMin: 'Bąbli/min', perHour: 'Bąbli/godz.',
     instant: 'Chwilowo', last: 'Ostatni bąbel', total: 'Łącznie', since: 'Liczone od',
@@ -259,8 +272,10 @@ const TXT = {
     sub: 'fermentation bubble counter', connecting: 'connecting…', live: 'live · {fps} fps', offline: 'no data from the counter',
     camera: 'Camera', imgAge: 'image {n} s old', noImage: 'Waiting for the camera image…', rotateBtn: '↻ Rotate 180°',
     pause: '⏸ Pause counting', resume: '▶ Resume counting', pausedBanner: '⏸ Counting paused', pausedPill: 'paused · not counting',
-    off: 'Turn off', on: 'Turn on', offT: 'Stop counting this jar (e.g. an empty jar). The airlock area and threshold stay saved.', onT: 'Start counting this jar again',
-    stOff: '○ off', stPaused: '⏸ paused', stDark: '🌙 too dark', darkBanner: '🌙 Too dark · counting paused', darkPill: 'too dark · not counting',
+    off: 'Turn off', on: 'Turn on', offT: 'Turn the jar off for longer (e.g. an empty jar). The airlock area and threshold stay saved.', onT: 'Start counting this jar again',
+    stOff: '○ off', stPaused: '⏸ paused', stHeld: '⏸ paused',
+    hold: '⏸', holdT: 'Pause counting this jar for a while (e.g. while topping up or moving it)', unhold: '▶', unholdT: 'Resume counting this jar',
+    fsCam: '⛶ Full screen', fsPage: '⛶ Full screen', fsPageOff: '✕ Exit full screen', fsClose: '✕ Close (Esc)', fsCamT: 'Camera image on the whole screen (or double-click the image)', stDark: '🌙 too dark', darkBanner: '🌙 Too dark · counting paused', darkPill: 'too dark · not counting',
     autoDark: '🌙 Pause automatically when it is too dark', darkLevel: 'Darkness level:', darkNow: 'now {v}',
     autoDarkHint: 'Counting pauses by itself when the airlock areas stay darker than this level for 30 s and resumes when they stay brighter for 30 s. Set it a little below the brightness in the evening while the camera still sees well.',
     fermNow: 'Current fermentation', fermArch: 'Compare with: {od} – {do} ({d})', nowShort: 'now',
@@ -278,7 +293,7 @@ const TXT = {
     areasSmall: 'Rectangle too small, try again.', imgAlt: 'Camera image with the marked airlocks',
     settings: 'Settings', minGap: 'Min. time between bubbles:',
     save: 'Save', saved: 'Saved ✓', saveFail: 'Could not save the settings ({e}).',
-    tips: 'Tips: keep the camera and jars still, use steady light (an LED lamp), a dark background behind the airlock and a rectangle that covers only the airlock with water. The frame on the image flashes for every counted bubble. The chart on each card shows the signal (line) and the threshold (dashed). The threshold is fixed, the program never changes it by itself. A bubble is counted when the signal crosses the threshold upwards. Put the threshold above the noise and below the bubble peaks: click or drag on the chart, use the slider or the −/+ buttons. Bubbles missed: lower it. Counting too many: raise it. When it gets dark, press “Pause counting” or turn on the automatic pause in the settings; turn an empty jar off with “Turn off” on its card. Paused time does not pull the charts or averages down. Settings are saved at once and shared by all open pages.',
+    tips: 'Tips: keep the camera and jars still, use steady light (an LED lamp), a dark background behind the airlock and a rectangle that covers only the airlock with water. The frame on the image flashes for every counted bubble. The chart on each card shows the signal (line) and the threshold (dashed). The threshold is fixed, the program never changes it by itself. A bubble is counted when the signal crosses the threshold upwards. Put the threshold above the noise and below the bubble peaks: click or drag on the chart, use the slider or the −/+ buttons. Bubbles missed: lower it. Counting too many: raise it. When it gets dark, press “Pause counting” or turn on the automatic pause in the settings. Pause one jar for a while with ⏸ on its card (e.g. while topping up) and turn an empty jar off with “Turn off”. Camera image on the whole screen: “⛶ Full screen” or double-click the image. Paused time does not pull the charts or averages down. Settings are saved at once and shared by all open pages.',
     license: 'MIT License',
     jar: 'Jar {n}', bps: 'bubbles/s', avg10: '(10 s average)', perMin: 'Bubbles/min', perHour: 'Bubbles/hour',
     instant: 'Instant', last: 'Last bubble', total: 'Total', since: 'Counting since',
@@ -404,9 +419,28 @@ function pokazLiczenie() {   // pause and per-jar on/off, shown right away from 
     const w = !!gs.wylaczony, k = g('bkW' + i); if (!k) return;
     g('bkK' + i).classList.toggle('wyl', w);
     k.textContent = w ? t('on') : t('off'); k.title = w ? t('onT') : t('offT'); k.classList.toggle('pz', w);
+    const hz = !!gs.wstrzymany && !w, hb = g('bkH' + i);
+    g('bkK' + i).classList.toggle('wst', hz);
+    hb.hidden = w; hb.textContent = hz ? t('unhold') : t('hold'); hb.title = hz ? t('unholdT') : t('holdT'); hb.setAttribute('aria-label', hb.title); hb.classList.toggle('pz', hz);
   });
   if (!rys) rysujRamki();
 }
+
+/* ---------- full screen: the camera image alone, or the whole page (e.g. a tablet on the shelf) ---------- */
+const peElement = () => document.fullscreenElement || document.webkitFullscreenElement || null;
+const peMozna = !!(document.fullscreenEnabled || document.webkitFullscreenEnabled);
+function peWlacz(el) { (el.requestFullscreen || el.webkitRequestFullscreen).call(el); }
+function peWylacz() { (document.exitFullscreen || document.webkitExitFullscreen).call(document); }
+function pePrzelacz(el) { if (peElement()) peWylacz(); else peWlacz(el); }
+g('bkPeKam').hidden = g('bkPePelny').hidden = !peMozna;
+g('bkPeKam').title = t('fsCamT');
+g('bkPeKam').onclick = () => pePrzelacz(document.querySelector('.bk-obrazwrap'));
+g('bkPePelny').onclick = () => pePrzelacz(document.documentElement);
+g('bkPeZamknij').onclick = () => peWylacz();
+document.querySelector('.bk-obrazwrap').addEventListener('dblclick', e => { if (zaznaczam < 0 && peMozna) pePrzelacz(e.currentTarget); });
+function pokazPe() { const p = peElement() === document.documentElement; g('bkPePelny').textContent = p ? t('fsPageOff') : t('fsPage'); setTimeout(rysujWykres, 100); }
+document.addEventListener('fullscreenchange', pokazPe); document.addEventListener('webkitfullscreenchange', pokazPe);
+pokazPe();
 
 /* ---------- new fermentation: all counters and history start from zero ---------- */
 g('bkNowa').onclick = async () => {
@@ -434,6 +468,7 @@ function budujKarty() {
     <div class="bk-nag"><span class="bk-kol"></span>
       <input class="bk-nazwa" id="bkN${i}" value="${esc(nazwa(i))}" maxlength="40" aria-label="${esc(t('nameAria'))}">
       <span class="bk-st" id="bkS${i}"></span>
+      <button class="b mini obrys ikona" id="bkH${i}"></button>
       <button class="b mini obrys" id="bkW${i}"></button></div>
     <div class="bk-gl"><b id="bkBps${i}">–</b><span class="mut">${t('bps')} <small>${t('avg10')}</small></span></div>
     <div class="bk-sia">
@@ -463,6 +498,7 @@ function budujKarty() {
     pokazProg(i);
     g('bkZ' + i).onclick = () => ustawTryb(zaznaczam === i ? -1 : i);
     g('bkW' + i).onclick = () => { const v = !cfg.gasiory[i].wylaczony; zmien(c => gas(c, i).wylaczony = v); };
+    g('bkH' + i).onclick = () => { const v = !cfg.gasiory[i].wstrzymany; zmien(c => gas(c, i).wstrzymany = v); };
     g('bkR' + i).onclick = () => {
       if (!confirm(t('resetQ', {name: nazwa(i)}))) return;
       const ts = Date.now() / 1000; zmien(c => gas(c, i).reset = ts);
@@ -535,7 +571,7 @@ async function odswiezStan() {
   pokazBaner(); pokazJasnosc();
   for (let i = 0; i < N; i++) {
     const s = swiezy && stan.gasiory[i];
-    g('bkS' + i).textContent = !s ? t('stNoData') : s.wylaczony ? t('stOff') : stan.pauza ? t('stPaused') : stan.ciemno ? t('stDark') : s.aktywny ? t('stCounting') : t('stMark');
+    g('bkS' + i).textContent = !s ? t('stNoData') : s.wylaczony ? t('stOff') : s.wstrzymany ? t('stHeld') : stan.pauza ? t('stPaused') : stan.ciemno ? t('stDark') : s.aktywny ? t('stCounting') : t('stMark');
     g('bkBps' + i).textContent = s && s.aktywny ? liczba(s.bps, 2) : '–';
     g('bkBpm' + i).textContent = s && s.aktywny ? liczba(s.bpm, 0) : '–';
     g('bkBph' + i).textContent = s && s.aktywny ? liczba(s.bph, 0) : '–';
@@ -586,14 +622,14 @@ function stosujObrot() {
   obraz.style.transform = cfg.obrot ? 'rotate(180deg)' : ''; obraz.classList.toggle('obr', !!cfg.obrot);
   g('bkObrBtn').classList.toggle('on', !!cfg.obrot);
 }
-img.onload = () => { os = {w: img.naturalWidth || 1280, h: img.naturalHeight || 720}; obraz.style.aspectRatio = `${os.w} / ${os.h}`; g('bkBrak').hidden = true; rysujRamki(); };
+img.onload = () => { os = {w: img.naturalWidth || 1280, h: img.naturalHeight || 720}; obraz.style.aspectRatio = `${os.w} / ${os.h}`; obraz.parentElement.style.setProperty('--ar', os.w / os.h); g('bkBrak').hidden = true; rysujRamki(); };
 function odswiezObraz() {
   if (document.hidden || rys) return;
   const n = new Image(); n.onload = () => { img.src = n.src; fotoT = Date.now(); wiekObrazu(); }; n.src = 'snapshot.jpg?t=' + Date.now();
 }
 function wiekObrazu() { g('bkFotoT').textContent = fotoT ? t('imgAge', {n: Math.round((Date.now() - fotoT) / 1000)}) : ''; }
 function ramka(r, i, tymcz) {
-  const d = document.createElement('div'); d.className = 'bk-ramka' + (tymcz ? ' tymcz' : '') + (!tymcz && (cfg.gasiory[i] || {}).wylaczony ? ' wyl' : ''); d.dataset.i = i;
+  const d = document.createElement('div'); d.className = 'bk-ramka' + (tymcz ? ' tymcz' : '') + (!tymcz && ((cfg.gasiory[i] || {}).wylaczony || (cfg.gasiory[i] || {}).wstrzymany) ? ' wyl' : ''); d.dataset.i = i;
   d.style.cssText = `--k:${KOLORY[i]};left:${r[0] / os.w * 100}%;top:${r[1] / os.h * 100}%;width:${r[2] / os.w * 100}%;height:${r[3] / os.h * 100}%` + (tymcz ? ';border-style:dashed' : '');
   d.innerHTML = `<span class="bk-et"></span>`;
   return d;

@@ -19,8 +19,9 @@
 - Fermentation statistics: averages, busiest hour, trend (speeding up / slowing down)
 - Live camera image at the top of the page; the airlock frame flashes for every counted bubble
 - Mark the airlocks with the mouse directly on the camera image
-- **Pause** button for all airlocks (e.g. at night) and an **on/off** switch for each jar; paused time does not pull the charts and averages down
+- **Pause** button for all airlocks (e.g. at night), a **pause** button and an **on/off** switch for each jar; paused time does not pull the charts and averages down
 - **Automatic pause in the dark**: counting stops by itself when the airlocks are too dark and resumes when it gets light
+- **Full screen** for the camera image or the whole page (e.g. a tablet next to the jars)
 - **Notes on the history chart** (e.g. "added sugar", "racked") with markers and tooltips
 - **New fermentation** button: all counters and the history start from zero; earlier fermentations stay in an archive and can be **compared** with the current one day by day
 - Settings are shared by all open pages and never overwritten by an old copy

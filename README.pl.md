@@ -19,8 +19,9 @@
 - Statystyki fermentacji: średnie, najaktywniejsza godzina, trend (przyspiesza / zwalnia)
 - Obraz z kamery na żywo na górze strony; ramka rurki miga przy każdym policzonym bąblu
 - Zaznaczanie rurek myszą bezpośrednio na obrazie z kamery
-- Przycisk **pauzy** dla wszystkich rurek (np. na noc) i **wyłącznik** każdego gąsiora; czas pauzy nie zaniża wykresów i średnich
+- Przycisk **pauzy** dla wszystkich rurek (np. na noc), oraz **pauza** i **wyłącznik** dla każdego gąsiora; czas pauzy nie zaniża wykresów i średnich
 - **Automatyczna pauza po zmroku**: liczenie samo staje, gdy rurki są za ciemne, i wraca, gdy się rozjaśni
+- **Pełny ekran** dla obrazu z kamery albo całej strony (np. tablet przy gąsiorach)
 - **Notatki na wykresie historii** (np. „dosypałem cukru”, „zlałem znad osadu”) ze znacznikami i podpowiedziami
 - Przycisk **Nowa fermentacja**: liczniki i historia zaczynają się od zera; wcześniejsze fermentacje zostają w archiwum i można je **porównać** z bieżącą dzień po dniu
 - Ustawienia są wspólne dla wszystkich otwartych stron i stara kopia ich nie nadpisze

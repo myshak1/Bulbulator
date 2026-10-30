@@ -27,8 +27,9 @@ the threshold (and at least przerwa_min seconds passed since the previous one).
 Only when an airlock has no threshold yet (new install, upgrade from 1.2) the
 program measures its noise for ~10 s once, saves a starting value and keeps it.
 
-Pause and switching airlocks off (both set on the page): while counting is
-paused ('pauza') or an airlock is switched off ('wylaczony'), nothing is counted
+Pause and switching airlocks off (set on the page): while counting is paused
+for all airlocks ('pauza'), for one airlock ('wstrzymany', e.g. while topping up
+or moving that jar) or an airlock is switched off ('wylaczony'), nothing is counted
 and the history gets an empty value instead of 0, so the charts and averages
 are not pulled down by the time the camera could not see anything.
 
@@ -62,7 +63,7 @@ import urllib.request
 import cv2
 import numpy as np
 
-VERSION = '1.5'
+VERSION = '1.6'
 HERE = os.path.dirname(os.path.abspath(__file__))
 
 STREAM = os.environ.get('BULBULATOR_STREAM', 'http://127.0.0.1:8090/stream')
@@ -84,7 +85,8 @@ SNAPSHOT = os.path.join(STATE, 'snapshot.jpg')
 SKALA = 2          # frames are analysed at half resolution (much faster)
 
 DOMYSLNA = {
-    'gasiory': [{'nazwa': f'Gąsior {i + 1}', 'roi': None, 'reset': 0, 'prog': None, 'wylaczony': False}
+    'gasiory': [{'nazwa': f'Gąsior {i + 1}', 'roi': None, 'reset': 0, 'prog': None, 'wylaczony': False,
+                 'wstrzymany': False}
                 for i in range(N)],
     'czulosc': 4.0,       # only for the one-time starting threshold (noise widths above the background)
     'przerwa_min': 0.35,  # minimum time between two bubbles in one airlock [s]
@@ -153,6 +155,7 @@ def normalizuj_cfg(c):
             d['roi'] = [int(v) for v in roi]
         d['reset'] = liczba_lub(g.get('reset'), 0.0)
         d['wylaczony'] = g.get('wylaczony') is True
+        d['wstrzymany'] = g.get('wstrzymany') is True
         d['czulosc'] = min(max(liczba_lub(g.get('czulosc'), cfg['czulosc']), 0.5), 20.0)
         p = liczba_lub(g.get('prog'), None)
         d['prog'] = None if p is None else round(min(max(p, PROG_MIN), PROG_MAX), 2)
@@ -619,11 +622,13 @@ def main():
                 log(f'too dark ({jasnosc:.0f} < {cfg["jasnosc_min"]:.0f}): counting paused' if ciemno
                     else f'light again ({jasnosc:.0f}): counting resumed')
 
-        liczy = [bool(g['roi']) and not g['wylaczony'] and not cfg['pauza'] and not ciemno for g in cfg['gasiory']]
+        liczy = [bool(g['roi']) and not g['wylaczony'] and not g['wstrzymany'] and not cfg['pauza'] and not ciemno
+                 for g in cfg['gasiory']]
         if liczy != liczy_poprz:
             if liczy_poprz is not None and not ciemno:
                 log('counting:', 'PAUSED' if cfg['pauza'] else
-                    ', '.join(f'airlock {i + 1} ' + ('on' if v else 'off') for i, v in enumerate(liczy)))
+                    ', '.join(f'airlock {i + 1} ' + ('on' if v else 'paused' if g['wstrzymany'] else 'off')
+                              for i, (v, g) in enumerate(zip(liczy, cfg['gasiory']))))
             liczy_poprz = liczy
         for i, g in enumerate(cfg['gasiory']):
             if not liczy[i]:
@@ -681,6 +686,7 @@ def main():
                     'aktywny': liczy[i],
                     'zaznaczony': bool(g['roi']),
                     'wylaczony': g['wylaczony'],
+                    'wstrzymany': g['wstrzymany'],
                     'bps': round(d.ile(t, 10) / 10, 2),
                     'bpm': d.ile(t, 60),
                     'bph': d.ile(t, 3600),
